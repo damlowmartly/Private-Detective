@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Investigator Room - Detective AI</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh;
+    }
+    #login-container, #room-content {
+      background: #1e1e1e;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.6);
+      max-width: 700px;
+      width: 90%;
+      margin-top: 60px;
+    }
+    #room-content {
+      display: none;
+    }
+    input[type=password] {
+      padding: 10px;
+      width: 100%;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+      margin-top: 15px;
+      background: #292929;
+      color: #ddd;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 25px;
+      font-size: 1rem;
+      background: #3f51b5;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background: #5c6bc0;
+    }
+    h2 {
+      margin-bottom: 0;
+    }
+    .case-log {
+      margin-top: 25px;
+      background: #292929;
+      padding: 15px;
+      border-radius: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+    .case-log h3 {
+      margin-top: 0;
+      color: #9ecfff;
+    }
+    textarea {
+      margin-top: 15px;
+      width: 100%;
+      height: 80px;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background: #292929;
+      color: #ddd;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <div id="login-container">
+    <h2>🔐 Investigator Access</h2>
+    <p>Please enter your password to access the Investigator Room.</p>
+    <input type="password" id="pwd-input" placeholder="Password" />
+    <button onclick="checkPassword()">Enter</button>
+  </div>
+
+  <div id="room-content">
+    <h1>🕵️ Investigator Room</h1>
+    <p>Here are recent case reports and notes:</p>
+
+    <div class="case-log" id="case-log">
+      <h3>Case Reports:</h3>
+      <ul id="case-list">
+        <li>Report #001: Bullying incident at high school.</li>
+        <li>Report #002: Alleged sexual harassment at workplace.</li>
+        <li>Report #003: Cyberbullying on social media platform.</li>
+      </ul>
+    </div>
+
+    <textarea id="note" placeholder="Add your investigation notes here..."></textarea>
+    <button onclick="saveNote()">Save Note</button>
+    <p id="status" style="margin-top:10px;"></p>
+  </div>
+
+  <!-- Hidden alert form -->
+  <form id="alert-form" action="https://formspree.io/f/YOUR-FORM-ID" method="POST" style="display:none;">
+    <input type="hidden" name="message" value="Unauthorized access attempt to Investigator Room." />
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    function checkPassword() {
+      const input = document.getElementById('pwd-input').value;
+      const correctPassword = 'secure-investigator-2025'; // Change this
+
+      if(input === correctPassword) {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('room-content').style.display = 'block';
+      } else {
+        document.getElementById('alert-form').submit();
+      }
+    }
+
+    function saveNote() {
+      const note = document.getElementById('note').value.trim();
+      const status = document.getElementById('status');
+
+      if(note.length === 0) {
+        status.textContent = "Note cannot be empty.";
+        status.style.color = '#ff6b6b';
+        return;
+      }
+
+      // Save to localStorage for demonstration
+      let savedNotes = JSON.parse(localStorage.getItem('investigatorNotes') || '[]');
+      savedNotes.push(note);
+      localStorage.setItem('investigatorNotes', JSON.stringify(savedNotes));
+
+      // Clear input & notify
+      document.getElementById('note').value = '';
+      status.textContent = "Note saved locally.";
+      status.style.color = '#7fff7f';
+    }
+  </script>
+</body>
+</html>
