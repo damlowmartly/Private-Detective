@@ -56,9 +56,18 @@
       background: #00ffe7cc;
       border-radius: 4px;
     }
+   .message-wrapper {
+      display: flex;
+      margin-bottom: 12px;
+    }
+    .message-wrapper.bot {
+      justify-content: flex-end;
+    }
+    .message-wrapper.user {
+      justify-content: flex-start;
+    }
 
-    .message {
-      margin-bottom: 18px;
+   .message {
       max-width: 75%;
       word-wrap: break-word;
       padding: 12px 18px;
@@ -67,20 +76,17 @@
       font-family: 'Roboto', sans-serif;
       font-size: 1rem;
     }
-
-    /* YOU are on the left */
+    
     .message.user {
       background: #00504f;
-      align-self: flex-start;
       border-top-right-radius: 0;
     }
-
-    /* AI is on the right */
+    
     .message.bot {
       background: #003939;
-      align-self: flex-end;
       border-top-left-radius: 0;
     }
+
 
     #input-area {
       display: flex;
