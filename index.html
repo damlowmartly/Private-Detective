@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detective AI - Report a Case</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+
+    .chat-container {
+      max-width: 600px;
+      margin: 50px auto;
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    .chat-box {
+      background-color: #2b2b2b;
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .bot {
+      color: #9ecfff;
+    }
+
+    .user {
+      color: #f4a261;
+      text-align: right;
+    }
+
+    .send-btn {
+      background-color: #3f51b5;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      width: 100%;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .send-btn:hover {
+      background-color: #5c6bc0;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h1>🕵️‍♂️ Detective AI</h1>
+    <p>Your voice matters. Report incidents safely here.</p>
+
+    <div id="chat-box" class="chat-box"></div>
+
+    <form id="report-form">
+      <input type="hidden" name="report" id="report-input" />
+      <button type="submit" class="send-btn">Submit Report</button>
+    </form>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chat-box');
+    const reportForm = document.getElementById('report-form');
+    const reportInput = document.getElementById('report-input');
+
+    let chatData = [];
+    let step = 0;
+
+    const questions = [
+      "Hello, I'm Detective AI. What's your first name?",
+      "Can you describe what happened?",
+      "When and where did this occur?",
+      "Do you know who was involved?",
+      "How has this affected you emotionally or physically?",
+      "Is there anything else you'd like to share?",
+      "Thank you. We'll review this with care. Ready to submit?"
+    ];
+
+    function appendMessage(text, sender) {
+      const msg = document.createElement('div');
+      msg.className = `message ${sender}`;
+      msg.innerText = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function askNextQuestion() {
+      if (step < questions.length) {
+        setTimeout(() => appendMessage(questions[step], 'bot'), 700);
+      }
+    }
+
+    function handleUserResponse(input) {
+      if (!input) return;
+      chatData.push({ question: questions[step], answer: input });
+      appendMessage(input, 'user');
+      step++;
+      askNextQuestion();
+    }
+
+    window.onload = () => {
+      askNextQuestion();
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const response = prompt(questions[step]);
+          if (response) handleUserResponse(response);
+        }
+      });
+    };
+
+    reportForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      reportInput.value = chatData.map(q => `${q.question}\n${q.answer}`).join('\n\n');
+
+      fetch('https://formspree.io/f/YOUR-FORM-ID', { // Replace with your Formspree ID
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report: reportInput.value })
+      }).then(response => {
+        if (response.ok) {
+          appendMessage("✅ Your report has been submitted. We'll be in touch.", "bot");
+        } else {
+          appendMessage("⚠️ There was a problem submitting your report. Please try again.", "bot");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
