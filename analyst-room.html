@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Analyst Room - Detective AI</title>
+  <style>
+    body {
+      background: #121212;
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 0;
+      min-height: 100vh;
+      display: flex; justify-content: center; align-items: flex-start;
+    }
+    #login-container, #room-content {
+      background: #1e1e1e;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #3f51b5;
+      max-width: 900px;
+      width: 90%;
+      margin: 50px 0;
+    }
+    #room-content { display: none; }
+    h1 {
+      color: #3f51b5;
+      margin-bottom: 25px;
+    }
+    button {
+      background: #3f51b5;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 25px;
+      font-size: 1rem;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 15px;
+    }
+    button:hover {
+      background: #5c6bc0;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input[type=text], textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      background: #292929;
+      border: none;
+      border-radius: 8px;
+      color: #eee;
+      font-size: 1rem;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    textarea {
+      min-height: 80px;
+    }
+    .report {
+      background: #292929;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 25px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .report h3 {
+      margin-top: 0;
+      color: #81a6ff;
+    }
+    .status {
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    .saved-notes {
+      margin-top: 15px;
+      background: #222;
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 140px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+    .note-item {
+      border-bottom: 1px solid #444;
+      padding: 6px 0;
+    }
+    .note-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="login-container">
+    <h2>🔐 Analyst Access</h2>
+    <p>Enter password to access Analyst Room.</p>
+    <input type="password" id="pwd-input" placeholder="Password" />
+    <button onclick="checkPassword()">Enter</button>
+  </div>
+
+  <div id="room-content">
+    <h1>📊 Analyst Room</h1>
+    <div id="reports-container">
+      <!-- Client reports with input forms will be appended here -->
+    </div>
+  </div>
+
+<script>
+  const correctPassword = 'analyst2025'; // change this password
+
+  function checkPassword() {
+    const val = document.getElementById('pwd-input').value;
+    if (val === correctPassword) {
+      document.getElementById('login-container').style.display = 'none';
+      document.getElementById('room-content').style.display = 'block';
+      loadReports();
+    } else {
+      alert('Incorrect password! Access denied.');
+    }
+  }
+
+  function loadReports() {
+    const container = document.getElementById('reports-container');
+    let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
+    if (reports.length === 0) {
+      container.innerHTML = '<p>No client reports available.</p>';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    reports.forEach((report, idx) => {
+      // Load saved analyst data per report, key by report index
+      let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
+      let saved = analystData[idx] || {};
+
+      const div = document.createElement('div');
+      div.className = 'report';
+      div.innerHTML = `
+        <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
+        <b>Age:</b> ${escapeHtml(report.age)}<br>
+        <b>Gender:</b> ${escapeHtml(report.gender)}<br>
+        <b>When:</b> ${escapeHtml(report.when)}<br>
+        <b>Behavior:</b> ${escapeHtml(report.behavior)}<br>
+        <b>Message:</b> ${escapeHtml(report.message)}<br>
+
+        <label>Analytical Observations / Patterns Noticed:</label>
+        <textarea id="obs-${idx}" placeholder="Write analytical observations...">${saved.observations || ''}</textarea>
+
+        <label>Analytical Notes:</label>
+        <textarea id="notes-${idx}" placeholder="Add analytical notes...">${saved.notes || ''}</textarea>
+
+        <button onclick="saveData(${idx})">Save Analyst Data</button>
+        <div class="status" id="status-${idx}"></div>
+
+        <div class="saved-notes" id="saved-notes-${idx}">
+          ${renderSavedNotes(saved.savedNotes || [])}
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  function saveData(idx) {
+    const obs = document.getElementById(`obs-${idx}`).value.trim();
+    const notes = document.getElementById(`notes-${idx}`).value.trim();
+    const status = document.getElementById(`status-${idx}`);
+
+    let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
+
+    if (!analystData[idx]) {
+      analystData[idx] = { observations: '', notes: '', savedNotes: [] };
+    }
+
+    analystData[idx].observations = obs;
+    analystData[idx].notes = notes;
+
+    // Save a timestamped note history on each save
+    const now = new Date().toLocaleString();
+    analystData[idx].savedNotes = analystData[idx].savedNotes || [];
+    analystData[idx].savedNotes.push(`[${now}] Analyst data saved.`);
+
+    localStorage.setItem('analystData', JSON.stringify(analystData));
+
+    status.style.color = '#4caf50';
+    status.textContent = 'Data saved successfully.';
+    renderSavedNotesUI(idx, analystData[idx].savedNotes);
+  }
+
+  function renderSavedNotes(notesArr) {
+    if (notesArr.length === 0) {
+      return '<em>No saved notes yet.</em>';
+    }
+    return notesArr.map(n => `<div class="note-item">${escapeHtml(n)}</div>`).join('');
+  }
+
+  function renderSavedNotesUI(idx, notesArr) {
+    const container = document.getElementById(`saved-notes-${idx}`);
+    container.innerHTML = renderSavedNotes(notesArr);
+  }
+
+  // Escape to prevent HTML injection
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>"']/g, function(m) {
+      return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m];
+    });
+  }
+</script>
+
+</body>
+</html>
