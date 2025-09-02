@@ -56,18 +56,21 @@
       background: #00ffe7cc;
       border-radius: 4px;
     }
-   .message-wrapper {
+
+    .message-wrapper {
       display: flex;
       margin-bottom: 12px;
     }
+
     .message-wrapper.bot {
-      justify-content: flex-end;
-    }
-    .message-wrapper.user {
-      justify-content: flex-start;
+      justify-content: flex-start; /* Bot on the left */
     }
 
-   .message {
+    .message-wrapper.user {
+      justify-content: flex-end; /* User on the right */
+    }
+
+    .message {
       max-width: 75%;
       word-wrap: break-word;
       padding: 12px 18px;
@@ -76,18 +79,18 @@
       font-family: 'Roboto', sans-serif;
       font-size: 1rem;
     }
-    
+
     .message.user {
       background: #00504f;
       border-top-right-radius: 0;
-      margin-left:100%;
+      color: #c6fff8;
     }
-    
+
     .message.bot {
       background: #003939;
       border-top-left-radius: 0;
+      color: #a4f9f5;
     }
-
 
     #input-area {
       display: flex;
@@ -133,6 +136,43 @@
       background: #00d8c9;
     }
 
+    #robot-helper {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #031012;
+      padding: 12px 16px;
+      border-top: 2px solid #00ffe7;
+      animation: float 3s ease-in-out infinite;
+      box-shadow: 0 0 12px #00ffe766;
+      margin-top: 10px;
+      border-radius: 0 0 15px 15px;
+    }
+
+    #robot-helper img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00ffe7aa;
+    }
+
+    #robot-helper p {
+      margin: 0;
+      font-size: 1rem;
+      color: #00ffe7;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
     @media (max-width: 600px) {
       #chat-container {
         font-size: 0.9rem;
@@ -155,12 +195,17 @@
   </div>
 
   <form id="chat-form" action="https://formspree.io/f/xkgvqwnw" method="POST" target="_blank">
-    <!-- Replace your_form_id with your actual Formspree ID -->
     <div id="input-area">
       <input type="text" name="message" id="user-input" autocomplete="off" placeholder="Describe your situation..." required />
       <button type="submit" aria-label="Send message">➤</button>
     </div>
   </form>
+
+  <!-- Robot Encouragement -->
+  <div id="robot-helper">
+    <img src="https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif" alt="Dancing Robot" />
+    <p>You're not alone. Keep fighting and praying!</p>
+  </div>
 </main>
 
 <script>
@@ -185,10 +230,15 @@
   let userResponses = [];
 
   function appendMessage(text, sender = 'bot') {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message-wrapper ' + sender;
+
     const msg = document.createElement('div');
     msg.className = 'message ' + sender;
     msg.textContent = text;
-    chatContainer.appendChild(msg);
+
+    wrapper.appendChild(msg);
+    chatContainer.appendChild(wrapper);
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
@@ -205,7 +255,6 @@
     userResponses.push(input);
     userInput.value = '';
 
-    // Save to localStorage for team access
     localStorage.setItem('clientReports', JSON.stringify(userResponses));
 
     currentQuestionIndex++;
@@ -220,7 +269,23 @@
     }
   });
 
+  function showRobotHelper() {
+    const robot = document.getElementById('robot-helper');
+    if (!robot) return;
+
+    robot.style.display = 'flex';
+
+    setTimeout(() => {
+      robot.style.display = 'none';
+    }, 6000); // Show for 6 seconds
+  }
+
+  // Show robot every 30 seconds
+  setInterval(showRobotHelper, 30000);
+
+  // Initial load
   window.onload = () => {
+    document.getElementById('robot-helper').style.display = 'none';
     chatContainer.innerHTML = '';
     currentQuestionIndex = 0;
     userResponses = [];
