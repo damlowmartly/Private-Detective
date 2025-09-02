@@ -1,212 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Detective AI Assistant</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto&display=swap');
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Detective AI Assistant</title>
+<style>
+  body { background: #0a0f14; color: #00ffea; font-family: 'Orbitron', 'Roboto', sans-serif; margin:0; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; }
+  main { background:#121b22; border-radius:15px; box-shadow: 0 0 20px #00ffe7aa inset; padding:20px; max-width:900px; width:90%; }
+  #chat-container { max-height: 400px; overflow-y:auto; margin-bottom: 10px; font-family:'Roboto', sans-serif; }
+  .message-wrapper { margin-bottom:12px; display:flex; }
+  .message-wrapper.bot { justify-content:flex-start; }
+  .message-wrapper.user { justify-content:flex-end; }
+  .message { max-width:75%; padding:12px 18px; border-radius:18px; box-shadow:0 0 8px #00ffe7bb; font-size:1rem; }
+  .message.user { background:#00504f; border-top-right-radius:0; color:#c6fff8; }
+  .message.bot { background:#003939; border-top-left-radius:0; color:#a4f9f5; }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background: #0a0f14;
-      color: #00ffea;
-      font-family: 'Orbitron', 'Roboto', sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 15px;
-    }
-
-    #chat-container {
-      background: #121b22;
-      border-radius: 15px 15px 0 0;
-      box-shadow: 0 0 20px #00ffe7aa inset;
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      font-size: 1rem;
-      line-height: 1.4;
-      color: #a4f9f5;
-      scrollbar-width: thin;
-      scrollbar-color: #00ffe7 #0a0f14;
-    }
-
-    #chat-container::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    #chat-container::-webkit-scrollbar-track {
-      background: #0a0f14;
-    }
-
-    #chat-container::-webkit-scrollbar-thumb {
-      background: #00ffe7cc;
-      border-radius: 4px;
-    }
-
-    .message-wrapper {
-      display: flex;
-      margin-bottom: 12px;
-    }
-
-    .message-wrapper.bot {
-      justify-content: flex-start;
-    }
-
-    .message-wrapper.user {
-      justify-content: flex-end;
-    }
-
-    .message {
-      max-width: 75%;
-      word-wrap: break-word;
-      padding: 12px 18px;
-      border-radius: 18px;
-      box-shadow: 0 0 8px #00ffe7bb;
-      font-family: 'Roboto', sans-serif;
-      font-size: 1rem;
-    }
-
-    .message.user {
-      background: #00504f;
-      border-top-right-radius: 0;
-      color: #c6fff8;
-    }
-
-    .message.bot {
-      background: #003939;
-      border-top-left-radius: 0;
-      color: #a4f9f5;
-    }
-
-    #input-area {
-      display: flex;
-      background: #071011;
-      padding: 12px 16px;
-      border-radius: 0 0 15px 15px;
-      box-shadow: 0 0 20px #00ffe7aa;
-    }
-
-    #input-area input[type="text"] {
-      flex: 1;
-      border: none;
-      outline: none;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 1rem;
-      font-family: 'Roboto', sans-serif;
-      background: #011c1a;
-      color: #00fff7;
-      box-shadow: inset 0 0 10px #008070;
-      transition: box-shadow 0.3s ease;
-    }
-
-    #input-area input[type="text"]:focus {
-      box-shadow: inset 0 0 15px #00ffe7;
-    }
-
-    #input-area button {
-      margin-left: 12px;
-      background: #00ffe7;
-      border: none;
-      border-radius: 10px;
-      color: #003333;
-      font-weight: 700;
-      font-size: 1.1rem;
-      cursor: pointer;
-      padding: 0 20px;
-      transition: background-color 0.3s ease;
-      box-shadow: 0 0 12px #00ffe7;
-    }
-
-    #input-area button:hover {
-      background: #00d8c9;
-    }
-
-    #robot-helper {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      background: #031012;
-      padding: 12px 16px;
-      border-top: 2px solid #00ffe7;
-      animation: float 3s ease-in-out infinite;
-      box-shadow: 0 0 12px #00ffe766;
-      margin-top: 10px;
-      border-radius: 0 0 15px 15px;
-    }
-
-    #robot-helper img {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #00ffe7aa;
-    }
-
-    #robot-helper p {
-      margin: 0;
-      font-size: 1rem;
-      color: #00ffe7;
-      font-family: 'Roboto', sans-serif;
-    }
-
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-5px);
-      }
-    }
-
-    @media (max-width: 600px) {
-      #chat-container {
-        font-size: 0.9rem;
-      }
-      #input-area input[type="text"] {
-        font-size: 0.9rem;
-      }
-      #input-area button {
-        font-size: 1rem;
-        padding: 0 16px;
-      }
-    }
-  </style>
+  form {
+    border-radius: 12px;
+    background: #011c1a;
+    padding: 15px;
+    box-shadow: inset 0 0 15px #008070;
+  }
+  form label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #00ffe7;
+  }
+  form input[type=email], form textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    background: #002825;
+    color: #00fff7;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  form textarea {
+    min-height: 100px;
+  }
+  form button {
+    margin-top: 10px;
+    background: #00ffe7;
+    border: none;
+    border-radius: 10px;
+    color: #003333;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 10px 20px;
+    box-shadow: 0 0 12px #00ffe7;
+    transition: background-color 0.3s ease;
+  }
+  form button:disabled {
+    background: #004d4c;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  form button:hover:not(:disabled) {
+    background: #00d8c9;
+  }
+</style>
 </head>
 <body>
 
 <main>
-  <div id="chat-container" aria-live="polite" aria-label="Chat messages">
-    <!-- Messages will appear here -->
-  </div>
+  <div id="chat-container" aria-live="polite" aria-label="Chat messages"></div>
 
-  <form id="chat-form" action="https://formspree.io/f/xkgvqwnw" method="POST">
-    <div id="input-area">
-      <input type="text" id="user-input" autocomplete="off" placeholder="Describe your situation..." required />
-      <button type="submit" aria-label="Send message">➤</button>
-    </div>
+  <!-- Your form structured exactly as you provided -->
+  <form id="chat-form" action="https://formspree.io/f/xkgvqwnw" method="POST" target="_blank" style="display:none;">
+    <label>
+      Your email:
+      <input type="email" name="email" id="user-email" required>
+    </label>
+    <label>
+      Your message:
+      <textarea name="message" id="full-message" required></textarea>
+    </label>
+    <button type="submit">Send</button>
   </form>
 
-  <!-- Robot Encouragement -->
-  <div id="robot-helper">
-    <img src="https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif" alt="Dancing Robot" />
-    <p>You're not alone. Keep fighting and praying!</p>
+  <!-- Text input for chat -->
+  <div id="input-area" style="margin-top: 10px;">
+    <input type="text" id="user-input" autocomplete="off" placeholder="Type your answer here..." required style="width: 100%; padding: 12px 16px; border-radius: 8px; border:none; outline:none; background:#011c1a; color:#00fff7; font-size:1rem; box-shadow: inset 0 0 10px #008070;" />
   </div>
 </main>
 
@@ -214,6 +92,9 @@
   const chatContainer = document.getElementById('chat-container');
   const chatForm = document.getElementById('chat-form');
   const userInput = document.getElementById('user-input');
+  const emailInput = document.getElementById('user-email');
+  const fullMessageTextarea = document.getElementById('full-message');
+  const inputArea = document.getElementById('input-area');
 
   const questions = [
     "Greetings. I’m Detective AI. Please tell me your full name.",
@@ -234,11 +115,9 @@
   function appendMessage(text, sender = 'bot') {
     const wrapper = document.createElement('div');
     wrapper.className = 'message-wrapper ' + sender;
-
     const msg = document.createElement('div');
     msg.className = 'message ' + sender;
     msg.textContent = text;
-
     wrapper.appendChild(msg);
     chatContainer.appendChild(wrapper);
     chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -246,76 +125,66 @@
 
   function startChat() {
     appendMessage(questions[0], 'bot');
+    userInput.disabled = false;
+    userInput.focus();
   }
 
-  chatForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const input = userInput.value.trim();
-    if (!input) return;
+  userInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const input = userInput.value.trim();
+      if (!input) return;
+      appendMessage(input, 'user');
+      userResponses.push(input);
+      userInput.value = '';
+      currentQuestionIndex++;
 
-    appendMessage(input, 'user');
-    userResponses.push(input);
-    userInput.value = '';
+      if (currentQuestionIndex < questions.length) {
+        setTimeout(() => {
+          appendMessage(questions[currentQuestionIndex], 'bot');
+        }, 700);
+      } else {
+        // All questions done - hide chat input, show form
+        appendMessage("Thank you. Please enter your email below and submit the form to complete your report.", 'bot');
+        userInput.disabled = true;
+        inputArea.style.display = 'none';
 
-    localStorage.setItem('clientReports', JSON.stringify(userResponses));
+        // Prepare the message text for form textarea
+        fullMessageTextarea.value = userResponses.map((ans, i) => `Q: ${questions[i]}\nA: ${ans}`).join('\n\n');
 
-    currentQuestionIndex++;
-    if (currentQuestionIndex < questions.length) {
-      setTimeout(() => {
-        appendMessage(questions[currentQuestionIndex], 'bot');
-      }, 800);
-    } else {
-      setTimeout(() => {
-        appendMessage("Thank you. Your report is secured. We’re taking over from here.", 'bot');
-
-        // Submit to Formspree after last question
-        fetch(chatForm.action, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            message: userResponses.join('\n\n')
-          })
-        })
-        .then(response => {
-          if (response.ok) {
-            console.log("Form successfully sent to Formspree.");
-          } else {
-            console.error("Formspree error.");
-          }
-        })
-        .catch(error => {
-          console.error("Network error:", error);
-        });
-
-      }, 1000);
+        // Show the form with email & message fields
+        chatForm.style.display = 'block';
+        emailInput.focus();
+      }
     }
   });
 
-  function showRobotHelper() {
-    const robot = document.getElementById('robot-helper');
-    if (!robot) return;
+  chatForm.addEventListener('submit', function(e) {
+    // Validate email
+    if (!emailInput.value.trim()) {
+      e.preventDefault();
+      alert("Please enter your email.");
+      emailInput.focus();
+      return;
+    }
 
-    robot.style.display = 'flex';
+    // Save report to localStorage before submission
+    let clientReports = JSON.parse(localStorage.getItem('clientReports') || '[]');
+    const newReport = {
+      name: userResponses[0] || "",
+      age: userResponses[1] || "",
+      gender: "", // optional if you want to add gender question
+      when: (userResponses[2] || "") + (userResponses[3] ? (" - " + userResponses[3]) : ""),
+      behavior: [userResponses[4], userResponses[5], userResponses[6]].filter(Boolean).join("; "),
+      message: fullMessageTextarea.value
+    };
+    clientReports.push(newReport);
+    localStorage.setItem('clientReports', JSON.stringify(clientReports));
+    
+    // Form will submit naturally to Formspree in a new tab (target="_blank")
+  });
 
-    setTimeout(() => {
-      robot.style.display = 'none';
-    }, 10000);
-  }
-
-  // Show dancing robot every 30 seconds
-  setInterval(showRobotHelper, 30000);
-
-  // Initialize chat
-  window.onload = () => {
-    document.getElementById('robot-helper').style.display = 'none';
-    chatContainer.innerHTML = '';
-    currentQuestionIndex = 0;
-    userResponses = [];
-    startChat();
-  };
+  window.onload = startChat;
 </script>
 
 </body>
