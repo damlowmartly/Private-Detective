@@ -49,9 +49,11 @@
     #chat-container::-webkit-scrollbar {
       width: 8px;
     }
+
     #chat-container::-webkit-scrollbar-track {
       background: #0a0f14;
     }
+
     #chat-container::-webkit-scrollbar-thumb {
       background: #00ffe7cc;
       border-radius: 4px;
@@ -63,11 +65,11 @@
     }
 
     .message-wrapper.bot {
-      justify-content: flex-start; /* Bot on the left */
+      justify-content: flex-start;
     }
 
     .message-wrapper.user {
-      justify-content: flex-end; /* User on the right */
+      justify-content: flex-end;
     }
 
     .message {
@@ -194,9 +196,9 @@
     <!-- Messages will appear here -->
   </div>
 
-  <form id="chat-form" action="https://formspree.io/f/xkgvqwnw" method="POST" target="_blank">
+  <form id="chat-form" action="https://formspree.io/f/xkgvqwnw" method="POST">
     <div id="input-area">
-      <input type="text" name="message" id="user-input" autocomplete="off" placeholder="Describe your situation..." required />
+      <input type="text" id="user-input" autocomplete="off" placeholder="Describe your situation..." required />
       <button type="submit" aria-label="Send message">➤</button>
     </div>
   </form>
@@ -204,7 +206,7 @@
   <!-- Robot Encouragement -->
   <div id="robot-helper">
     <img src="https://media.giphy.com/media/13CoXDiaCcCoyk/giphy.gif" alt="Dancing Robot" />
-    <p>You're not alone. Keep fighting and praying ! </p>
+    <p>You're not alone. Keep fighting and praying!</p>
   </div>
 </main>
 
@@ -265,6 +267,29 @@
     } else {
       setTimeout(() => {
         appendMessage("Thank you. Your report is secured. We’re taking over from here.", 'bot');
+
+        // Submit to Formspree after last question
+        fetch(chatForm.action, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            message: userResponses.join('\n\n')
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            console.log("Form successfully sent to Formspree.");
+          } else {
+            console.error("Formspree error.");
+          }
+        })
+        .catch(error => {
+          console.error("Network error:", error);
+        });
+
       }, 1000);
     }
   });
@@ -277,13 +302,13 @@
 
     setTimeout(() => {
       robot.style.display = 'none';
-    }, 10000); // Show for 6 seconds
+    }, 10000);
   }
 
-  // Show robot every 30 seconds
+  // Show dancing robot every 30 seconds
   setInterval(showRobotHelper, 30000);
 
-  // Initial load
+  // Initialize chat
   window.onload = () => {
     document.getElementById('robot-helper').style.display = 'none';
     chatContainer.innerHTML = '';
