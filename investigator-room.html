@@ -12,6 +12,7 @@
       min-height: 100vh;
       display: flex; justify-content: center; align-items: flex-start;
     }
+
     #login-container, #room-content {
       background: #1e1e1e;
       padding: 25px 30px;
@@ -21,11 +22,14 @@
       width: 95%;
       margin: 50px 0;
     }
+
     #room-content { display: none; }
+
     h1 {
       color: #3f51b5;
       margin-bottom: 25px;
     }
+
     button {
       background: #3f51b5;
       border: none;
@@ -37,15 +41,18 @@
       transition: background-color 0.3s ease;
       margin-top: 15px;
     }
+
     button:hover {
       background: #5c6bc0;
     }
+
     label {
       display: block;
       margin-top: 15px;
       font-weight: 600;
     }
-    input[type=text], textarea {
+
+    input[type=password], textarea {
       width: 100%;
       padding: 10px;
       margin-top: 8px;
@@ -57,9 +64,11 @@
       box-sizing: border-box;
       resize: vertical;
     }
+
     textarea {
       min-height: 80px;
     }
+
     .report {
       background: #292929;
       border-radius: 8px;
@@ -68,14 +77,17 @@
       max-height: 500px;
       overflow-y: auto;
     }
+
     .report h3 {
       margin-top: 0;
       color: #81a6ff;
     }
+
     .status {
       margin-top: 10px;
       font-weight: 600;
     }
+
     .saved-notes {
       margin-top: 15px;
       background: #222;
@@ -85,13 +97,16 @@
       overflow-y: auto;
       font-size: 0.9rem;
     }
+
     .note-item {
       border-bottom: 1px solid #444;
       padding: 6px 0;
     }
+
     .note-item:last-child {
       border-bottom: none;
     }
+
     .data-block {
       border: 1px solid #444;
       padding: 10px;
@@ -101,11 +116,13 @@
       max-height: 120px;
       overflow-y: auto;
     }
+
     .flex-row {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
     }
+
     .flex-col {
       flex: 1 1 300px;
       min-width: 280px;
@@ -114,184 +131,185 @@
 </head>
 <body>
 
+  <!-- Login Form -->
   <div id="login-container">
     <h2>🔐 Investigator Access</h2>
     <p>Enter password to access Investigator Room.</p>
-    <input type="password" id="pwd-input" placeholder="Password" />
-    <button onclick="checkPassword()">Enter</button>
+    <form onsubmit="checkPassword(event)">
+      <input type="password" id="pwd-input" placeholder="Password" required />
+      <button type="submit">Enter</button>
+    </form>
   </div>
 
+  <!-- Main Investigator Room -->
   <div id="room-content">
     <h1>🕵️ Investigator Room</h1>
     <div id="reports-container">
-      <!-- Reports with combined data and input forms -->
+      <!-- Reports will be dynamically inserted here -->
     </div>
   </div>
 
-<script>
-  const correctPassword = 'investigator2025'; // change this password
+  <script>
+    const correctPassword = 'investigator2025'; // You can change this
 
-  function checkPassword() {
-    const val = document.getElementById('pwd-input').value;
-    if (val === correctPassword) {
-      document.getElementById('login-container').style.display = 'none';
-      document.getElementById('room-content').style.display = 'block';
-      loadReports();
-    } else {
-      alert('Incorrect password! Access denied.');
-    }
-  }
-
-  function loadReports() {
-    const container = document.getElementById('reports-container');
-    let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
-    if (reports.length === 0) {
-      container.innerHTML = '<p>No client reports available.</p>';
-      return;
+    function checkPassword(event) {
+      event.preventDefault();
+      const val = document.getElementById('pwd-input').value;
+      if (val === correctPassword) {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('room-content').style.display = 'block';
+        loadReports();
+      } else {
+        alert('Incorrect password! Access denied.');
+      }
     }
 
-    // Load other team data
-    let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
-    let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
-    let investigatorData = JSON.parse(localStorage.getItem('investigatorData') || '{}');
+    function loadReports() {
+      const container = document.getElementById('reports-container');
+      let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
+      if (reports.length === 0) {
+        container.innerHTML = '<p>No client reports available.</p>';
+        return;
+      }
 
-    container.innerHTML = '';
+      let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
+      let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
+      let investigatorData = JSON.parse(localStorage.getItem('investigatorData') || '{}');
 
-    reports.forEach((report, idx) => {
-  let psych = psychData[idx] || {};
-  let analyst = analystData[idx] || {};
-  let investigator = investigatorData[idx] || { detectiveNotes: '', assignedTasks: '', savedNotes: [] };
+      container.innerHTML = '';
 
-  // Prepare search URLs
-  const nameEncoded = encodeURIComponent(report.name);
-  const behaviorEncoded = encodeURIComponent(report.behavior);
-  const whenEncoded = encodeURIComponent(report.when);
+      reports.forEach((report, idx) => {
+        let psych = psychData[idx] || {};
+        let analyst = analystData[idx] || {};
+        let investigator = investigatorData[idx] || { detectiveNotes: '', assignedTasks: '', savedNotes: [] };
 
-  const googleSearch = `https://www.google.com/search?q=${nameEncoded}`;
-  const facebookSearch = `https://www.facebook.com/search/top?q=${nameEncoded}`;
-  const twitterSearch = `https://twitter.com/search?q=${nameEncoded}`;
-  const scholarSearch = `https://scholar.google.com/scholar?q=${behaviorEncoded}`;
+        const nameEncoded = encodeURIComponent(report.name);
+        const behaviorEncoded = encodeURIComponent(report.behavior);
+        const whenEncoded = encodeURIComponent(report.when);
 
-  // Simple sentiment function (very basic)
-  function getSentiment(text) {
-    const positive = ['good','happy','safe','love','support'];
-    const negative = ['bad','sad','fear','hate','bully','danger','hurt'];
-    const txt = text.toLowerCase();
-    let score = 0;
-    positive.forEach(word => { if (txt.includes(word)) score++; });
-    negative.forEach(word => { if (txt.includes(word)) score--; });
-    if(score > 0) return '😊 Positive';
-    if(score < 0) return '😟 Negative';
-    return '😐 Neutral';
-  }
+        const googleSearch = `https://www.google.com/search?q=${nameEncoded}`;
+        const facebookSearch = `https://www.facebook.com/search/top?q=${nameEncoded}`;
+        const twitterSearch = `https://twitter.com/search?q=${nameEncoded}`;
+        const scholarSearch = `https://scholar.google.com/scholar?q=${behaviorEncoded}`;
 
-  const sentimentResult = getSentiment(report.message || '');
+        function getSentiment(text) {
+          const positive = ['good', 'happy', 'safe', 'love', 'support'];
+          const negative = ['bad', 'sad', 'fear', 'hate', 'bully', 'danger', 'hurt'];
+          const txt = text.toLowerCase();
+          let score = 0;
+          positive.forEach(word => { if (txt.includes(word)) score++; });
+          negative.forEach(word => { if (txt.includes(word)) score--; });
+          if (score > 0) return '😊 Positive';
+          if (score < 0) return '😟 Negative';
+          return '😐 Neutral';
+        }
 
-  const div = document.createElement('div');
-  div.className = 'report';
+        const sentimentResult = getSentiment(report.message || '');
 
-  div.innerHTML = `
-    <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
-    <div class="flex-row">
-      <div class="flex-col">
-        <b>Client Info</b>
-        <div class="data-block">
-          Age: ${escapeHtml(report.age)}<br>
-          Gender: ${escapeHtml(report.gender)}<br>
-          When: ${escapeHtml(report.when)}<br>
-          Behavior: ${escapeHtml(report.behavior)}<br>
-          Message: ${escapeHtml(report.message)}<br>
-          <b>Message Sentiment:</b> ${sentimentResult}
-        </div>
-        <div style="margin-top:10px;">
-          <b>Quick Searches:</b><br>
-          <button onclick="window.open('${googleSearch}','_blank')">Google</button>
-          <button onclick="window.open('${facebookSearch}','_blank')">Facebook</button>
-          <button onclick="window.open('${twitterSearch}','_blank')">Twitter</button>
-          <button onclick="window.open('${scholarSearch}','_blank')">Scholar</button>
-        </div>
-      </div>
+        const div = document.createElement('div');
+        div.className = 'report';
 
-      <div class="flex-col">
-        <b>Psychologist Observations</b>
-        <div class="data-block">${escapeHtml(psych.observations || 'No data')}</div>
-        <b>Behavior Details</b>
-        <div class="data-block">${escapeHtml(psych.behaviorDetails || 'No data')}</div>
-        <b>Psychological Notes</b>
-        <div class="data-block">${escapeHtml(psych.notes || 'No data')}</div>
-      </div>
-      <div class="flex-col">
-        <b>Analyst Observations</b>
-        <div class="data-block">${escapeHtml(analyst.observations || 'No data')}</div>
-        <b>Analytical Notes</b>
-        <div class="data-block">${escapeHtml(analyst.notes || 'No data')}</div>
-      </div>
-    </div>
+        div.innerHTML = `
+          <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
+          <div class="flex-row">
+            <div class="flex-col">
+              <b>Client Info</b>
+              <div class="data-block">
+                Age: ${escapeHtml(report.age)}<br>
+                Gender: ${escapeHtml(report.gender)}<br>
+                When: ${escapeHtml(report.when)}<br>
+                Behavior: ${escapeHtml(report.behavior)}<br>
+                Message: ${escapeHtml(report.message)}<br>
+                <b>Message Sentiment:</b> ${sentimentResult}
+              </div>
+              <div style="margin-top:10px;">
+                <b>Quick Searches:</b><br>
+                <button onclick="window.open('${googleSearch}','_blank')">Google</button>
+                <button onclick="window.open('${facebookSearch}','_blank')">Facebook</button>
+                <button onclick="window.open('${twitterSearch}','_blank')">Twitter</button>
+                <button onclick="window.open('${scholarSearch}','_blank')">Scholar</button>
+              </div>
+            </div>
 
-    <label>Detective Notes:</label>
-    <textarea id="detective-notes-${idx}" placeholder="Add your detective notes...">${investigator.detectiveNotes || ''}</textarea>
+            <div class="flex-col">
+              <b>Psychologist Observations</b>
+              <div class="data-block">${escapeHtml(psych.observations || 'No data')}</div>
+              <b>Behavior Details</b>
+              <div class="data-block">${escapeHtml(psych.behaviorDetails || 'No data')}</div>
+              <b>Psychological Notes</b>
+              <div class="data-block">${escapeHtml(psych.notes || 'No data')}</div>
+            </div>
 
-    <label>Assign Tasks to Team:</label>
-    <textarea id="assigned-tasks-${idx}" placeholder="Write tasks for psychologist or analyst...">${investigator.assignedTasks || ''}</textarea>
+            <div class="flex-col">
+              <b>Analyst Observations</b>
+              <div class="data-block">${escapeHtml(analyst.observations || 'No data')}</div>
+              <b>Analytical Notes</b>
+              <div class="data-block">${escapeHtml(analyst.notes || 'No data')}</div>
+            </div>
+          </div>
 
-    <button onclick="saveData(${idx})">Save Investigator Data</button>
-    <div class="status" id="status-${idx}"></div>
+          <label>Detective Notes:</label>
+          <textarea id="detective-notes-${idx}" placeholder="Add your detective notes...">${investigator.detectiveNotes || ''}</textarea>
 
-    <div class="saved-notes" id="saved-notes-${idx}">
-      ${renderSavedNotes(investigator.savedNotes || [])}
-    </div>
-  `;
+          <label>Assign Tasks to Team:</label>
+          <textarea id="assigned-tasks-${idx}" placeholder="Write tasks for psychologist or analyst...">${investigator.assignedTasks || ''}</textarea>
 
-  container.appendChild(div);
-});
+          <button onclick="saveData(${idx})">Save Investigator Data</button>
+          <div class="status" id="status-${idx}"></div>
 
+          <div class="saved-notes" id="saved-notes-${idx}">
+            ${renderSavedNotes(investigator.savedNotes || [])}
+          </div>
+        `;
 
-  function saveData(idx) {
-    const detectiveNotes = document.getElementById(`detective-notes-${idx}`).value.trim();
-    const assignedTasks = document.getElementById(`assigned-tasks-${idx}`).value.trim();
-    const status = document.getElementById(`status-${idx}`);
-
-    let investigatorData = JSON.parse(localStorage.getItem('investigatorData') || '{}');
-
-    if (!investigatorData[idx]) {
-      investigatorData[idx] = { detectiveNotes: '', assignedTasks: '', savedNotes: [] };
+        container.appendChild(div);
+      });
     }
 
-    investigatorData[idx].detectiveNotes = detectiveNotes;
-    investigatorData[idx].assignedTasks = assignedTasks;
+    function saveData(idx) {
+      const detectiveNotes = document.getElementById(`detective-notes-${idx}`).value.trim();
+      const assignedTasks = document.getElementById(`assigned-tasks-${idx}`).value.trim();
+      const status = document.getElementById(`status-${idx}`);
 
-    // Timestamp the save
-    const now = new Date().toLocaleString();
-    investigatorData[idx].savedNotes = investigatorData[idx].savedNotes || [];
-    investigatorData[idx].savedNotes.push(`[${now}] Investigator data saved.`);
+      let investigatorData = JSON.parse(localStorage.getItem('investigatorData') || '{}');
 
-    localStorage.setItem('investigatorData', JSON.stringify(investigatorData));
+      if (!investigatorData[idx]) {
+        investigatorData[idx] = { detectiveNotes: '', assignedTasks: '', savedNotes: [] };
+      }
 
-    status.style.color = '#4caf50';
-    status.textContent = 'Investigator data saved successfully.';
-    renderSavedNotesUI(idx, investigatorData[idx].savedNotes);
-  }
+      investigatorData[idx].detectiveNotes = detectiveNotes;
+      investigatorData[idx].assignedTasks = assignedTasks;
 
-  function renderSavedNotes(notesArr) {
-    if (notesArr.length === 0) {
-      return '<em>No saved notes yet.</em>';
+      const now = new Date().toLocaleString();
+      investigatorData[idx].savedNotes = investigatorData[idx].savedNotes || [];
+      investigatorData[idx].savedNotes.push(`[${now}] Investigator data saved.`);
+
+      localStorage.setItem('investigatorData', JSON.stringify(investigatorData));
+
+      status.style.color = '#4caf50';
+      status.textContent = 'Investigator data saved successfully.';
+      renderSavedNotesUI(idx, investigatorData[idx].savedNotes);
     }
-    return notesArr.map(n => `<div class="note-item">${escapeHtml(n)}</div>`).join('');
-  }
 
-  function renderSavedNotesUI(idx, notesArr) {
-    const container = document.getElementById(`saved-notes-${idx}`);
-    container.innerHTML = renderSavedNotes(notesArr);
-  }
+    function renderSavedNotes(notesArr) {
+      if (notesArr.length === 0) {
+        return '<em>No saved notes yet.</em>';
+      }
+      return notesArr.map(n => `<div class="note-item">${escapeHtml(n)}</div>`).join('');
+    }
 
-  // Escape to prevent HTML injection
-  function escapeHtml(text) {
-    if (!text) return '';
-    return text.replace(/[&<>"']/g, function(m) {
-      return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m];
-    });
-  }
-</script>
+    function renderSavedNotesUI(idx, notesArr) {
+      const container = document.getElementById(`saved-notes-${idx}`);
+      container.innerHTML = renderSavedNotes(notesArr);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m];
+      });
+    }
+  </script>
 
 </body>
 </html>
