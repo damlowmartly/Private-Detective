@@ -12,6 +12,7 @@
       min-height: 100vh;
       display: flex; justify-content: center; align-items: flex-start;
     }
+
     #login-container, #room-content {
       background: #1e1e1e;
       padding: 25px 30px;
@@ -21,11 +22,14 @@
       width: 90%;
       margin: 50px 0;
     }
+
     #room-content { display: none; }
+
     h1 {
       color: #3f51b5;
       margin-bottom: 25px;
     }
+
     button {
       background: #3f51b5;
       border: none;
@@ -37,14 +41,17 @@
       transition: background-color 0.3s ease;
       margin-left: 8px;
     }
+
     button:hover {
       background: #5c6bc0;
     }
+
     label {
       display: block;
       margin-top: 15px;
       font-weight: 600;
     }
+
     input[type=text], input[type=number], input[type=password], select, textarea {
       width: 100%;
       padding: 10px;
@@ -57,17 +64,19 @@
       box-sizing: border-box;
       resize: vertical;
     }
+
     textarea {
       min-height: 80px;
     }
+
     .report {
       background: #292929;
       border-radius: 8px;
       padding: 15px;
       margin-bottom: 25px;
-      max-height: 520px;
-      overflow-y: auto;
+      box-shadow: 0 0 8px rgba(63, 81, 181, 0.4);
     }
+
     .report h3 {
       margin-top: 0;
       color: #81a6ff;
@@ -75,13 +84,17 @@
       align-items: center;
       flex-wrap: wrap;
     }
+
     .report h3 > span {
       flex: 1;
     }
+
     .status {
       margin-top: 10px;
       font-weight: 600;
+      color: #4caf50;
     }
+
     .saved-notes {
       margin-top: 15px;
       background: #222;
@@ -91,23 +104,27 @@
       overflow-y: auto;
       font-size: 0.9rem;
     }
+
     .note-item {
       border-bottom: 1px solid #444;
       padding: 6px 0;
     }
+
     .note-item:last-child {
       border-bottom: none;
     }
-    .wiki-summary {
-      background: #101a2a;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 0.9rem;
-      max-height: 120px;
-      overflow-y: auto;
-      color: #add8e6;
-      font-style: italic;
+
+    /* 🧠 Elfsight Widget (initially hidden) */
+    .elfsight-app-38d8b2d9-12fc-48f3-a677-75ba1f2d5c0b {
+      display: none;
+    }
+
+    .chat-visible .elfsight-app-38d8b2d9-12fc-48f3-a677-75ba1f2d5c0b {
+      display: block;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
     }
   </style>
 </head>
@@ -129,6 +146,10 @@
     </div>
   </div>
 
+  <!-- ✅ Elfsight AI Chatbot Script -->
+  <script src="https://elfsightcdn.com/platform.js" async></script>
+  <div class="elfsight-app-38d8b2d9-12fc-48f3-a677-75ba1f2d5c0b" data-elfsight-app-lazy></div>
+
   <script>
     const correctPassword = 'psychologist2025';
 
@@ -138,6 +159,7 @@
       if (input === correctPassword) {
         document.getElementById('login-container').style.display = 'none';
         document.getElementById('room-content').style.display = 'block';
+        document.body.classList.add('chat-visible'); // ✅ Show chatbot
         loadReports();
       } else {
         alert('Incorrect password! Access denied.');
@@ -145,80 +167,56 @@
     });
 
     function loadReports() {
-  const container = document.getElementById('reports-container');
-  let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
-  if (reports.length === 0) {
-    container.innerHTML = '<p>No client reports available.</p>';
-    return;
-  }
+      const container = document.getElementById('reports-container');
+      let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
+      if (reports.length === 0) {
+        container.innerHTML = '<p>No client reports available.</p>';
+        return;
+      }
 
-  container.innerHTML = '';
-  reports.forEach((report, idx) => {
-    let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
-    let saved = psychData[idx] || {};
+      container.innerHTML = '';
+      reports.forEach((report, idx) => {
+        let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
+        let saved = psychData[idx] || { savedNotes: [] };
 
-    const nameEsc = escapeHtml(report.name || '');
-    const ageEsc = escapeHtml(report.age || '');
-    const genderEsc = escapeHtml(report.gender || '');
-    const whenStr = typeof report.when === 'string' ? report.when : '';
-    const behaviorStr = typeof report.behavior === 'string' ? report.behavior : '';
-    const messageEsc = escapeHtml(report.message || '');
+        const nameEsc = escapeHtml(report.name || '');
+        const ageEsc = escapeHtml(report.age || '');
+        const genderEsc = escapeHtml(report.gender || '');
+        const whenStr = typeof report.when === 'string' ? report.when : '';
+        const behaviorStr = typeof report.behavior === 'string' ? report.behavior : '';
+        const messageEsc = escapeHtml(report.message || '');
 
-    // Behavior keywords safely extracted
-    let behaviorKeywords = '';
-    if (behaviorStr.length > 0) {
-      behaviorKeywords = behaviorStr.split(/[,;.]/)[0].trim();
+        const div = document.createElement('div');
+        div.className = 'report';
+        div.innerHTML = `
+          <h3><span>Report #${idx + 1} - ${nameEsc}</span></h3>
+          <b>Age:</b> ${ageEsc}<br>
+          <b>Gender:</b> ${genderEsc}<br>
+          <b>When:</b> ${whenStr}<br>
+          <b>Behavior:</b> ${behaviorStr}<br>
+          <b>Message:</b> ${messageEsc}<br>
+
+          <label for="obs-${idx}">Psychologist Observations:</label>
+          <textarea id="obs-${idx}" placeholder="Write your observations...">${escapeHtml(saved.observations || '')}</textarea>
+
+          <label for="behav-details-${idx}">Behavior Details:</label>
+          <input type="text" id="behav-details-${idx}" value="${escapeHtml(saved.behaviorDetails || '')}" />
+
+          <label for="notes-${idx}">Psychological Notes:</label>
+          <textarea id="notes-${idx}" placeholder="Add psychological notes...">${escapeHtml(saved.notes || '')}</textarea>
+
+          <button onclick="saveData(${idx})">💾 Save</button>
+          <button onclick="sendToChatbot('${escapeJs(nameEsc)}', '${escapeJs(behaviorStr)}', '${escapeJs(messageEsc)}')">🤖 Send to Chatbot</button>
+
+          <div class="status" id="status-${idx}"></div>
+
+          <div class="saved-notes" id="saved-notes-${idx}">
+            ${renderSavedNotes(saved.savedNotes || [])}
+          </div>
+        `;
+        container.appendChild(div);
+      });
     }
-
-    let scholarSearchURL = `https://scholar.google.com/scholar?q=${encodeURIComponent(behaviorKeywords)}`;
-    let facebookSearchURL = `https://www.facebook.com/search/top?q=${encodeURIComponent(report.name || '')}`;
-
-    // Safe split on when
-    let whenParts = whenStr.length > 0 ? whenStr.split(' - ') : ['', ''];
-    let datePart = whenParts[0]?.trim() || '';
-    let locationPart = whenParts[1]?.trim() || '';
-    let weatherSearchQuery = `${datePart} weather in ${locationPart}`.trim();
-    let weatherSearchURL = `https://www.google.com/search?q=${encodeURIComponent(weatherSearchQuery)}`;
-
-    const wikiSummaryId = `wiki-summary-${idx}`;
-    const div = document.createElement('div');
-    div.className = 'report';
-    div.innerHTML = `
-      <h3><span>Report #${idx + 1} - ${nameEsc}</span>
-        <button onclick="window.open('${facebookSearchURL}', '_blank')">🔍 Facebook</button>
-      </h3>
-      <b>Age:</b> ${ageEsc}<br>
-      <b>Gender:</b> ${genderEsc}<br>
-      <b>When:</b> ${whenStr}
-      <button onclick="window.open('${weatherSearchURL}', '_blank')">🌤️ Weather</button><br>
-      <b>Behavior:</b> ${behaviorStr}
-      <button onclick="window.open('${scholarSearchURL}', '_blank')">📚 Scholar</button>
-
-      <div class="wiki-summary" id="${wikiSummaryId}">
-        <em>Loading Wikipedia summary for behavior...</em>
-      </div>
-
-      <label>Psychologist Observations / Experience:</label>
-      <textarea id="obs-${idx}" placeholder="Write your observations...">${saved.observations || ''}</textarea>
-
-      <label>Behavior Details (age/gender/experience):</label>
-      <input type="text" id="behav-details-${idx}" value="${saved.behaviorDetails || ''}" />
-
-      <label>Psychological Notes:</label>
-      <textarea id="notes-${idx}" placeholder="Add psychological notes...">${saved.notes || ''}</textarea>
-
-      <button onclick="saveData(${idx})">Save Psychologist Data</button>
-      <div class="status" id="status-${idx}"></div>
-
-      <div class="saved-notes" id="saved-notes-${idx}">
-        ${renderSavedNotes(saved.savedNotes || [])}
-      </div>
-    `;
-    container.appendChild(div);
-    fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
-  });
-}
-
 
     function saveData(idx) {
       const obs = document.getElementById(`obs-${idx}`).value.trim();
@@ -237,9 +235,23 @@
 
       localStorage.setItem('psychologistData', JSON.stringify(psychData));
 
-      status.style.color = '#4caf50';
       status.textContent = 'Data saved successfully.';
       renderSavedNotesUI(idx, psychData[idx].savedNotes);
+
+      // Remove status after 3 seconds
+      setTimeout(() => {
+        status.textContent = '';
+      }, 3000);
+    }
+
+    function sendToChatbot(name, behavior, message) {
+      const msg = `Client: ${name}\nBehavior: ${behavior}\nMessage: ${message}`;
+      // ✅ Try sending to Elfsight Chatbot (may vary by widget)
+      if (window.ElfsightMessengerAPI && typeof window.ElfsightMessengerAPI.send === 'function') {
+        window.ElfsightMessengerAPI.send(msg);
+      } else {
+        alert('Chatbot API not ready. Try again in a moment.');
+      }
     }
 
     function renderSavedNotes(notesArr) {
@@ -248,31 +260,21 @@
     }
 
     function renderSavedNotesUI(idx, notesArr) {
-      document.getElementById(`saved-notes-${idx}`).innerHTML = renderSavedNotes(notesArr);
+      const container = document.getElementById(`saved-notes-${idx}`);
+      if (container) {
+        container.innerHTML = renderSavedNotes(notesArr);
+      }
     }
 
     function escapeHtml(text) {
       if (!text) return '';
       return text.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
     }
-
-    async function fetchWikipediaSummary(query, containerId) {
-      if (!query) {
-        document.getElementById(containerId).innerHTML = "<em>No behavior keywords provided.</em>";
-        return;
-      }
-      try {
-        const resp = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
-        if (!resp.ok) throw new Error();
-        const data = await resp.json();
-        document.getElementById(containerId).innerHTML = data.extract
-          ? `<strong>Wikipedia summary:</strong> ${escapeHtml(data.extract)}`
-          : "<em>No summary available for this topic.</em>";
-      } catch {
-        document.getElementById(containerId).innerHTML = "<em>Wikipedia summary not found.</em>";
-      }
+    // Escape for putting inside single quoted JS strings safely
+    function escapeJs(text) {
+      if (!text) return '';
+      return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '');
     }
   </script>
-
 </body>
 </html>
