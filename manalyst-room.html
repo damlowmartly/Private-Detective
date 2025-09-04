@@ -176,61 +176,61 @@
       // Load saved analyst data per report, key by report index
       let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
       let saved = analystData[idx] || {};
-
-      // Behavior keyword for scholar search (first phrase or main keywords)
-      let behaviorKeywords = report.behavior ? report.behavior.split(/[,;.]/)[0].trim() : '';
+    
+      // Defensive checks for behavior field before split
+      let behaviorKeywords = (typeof report.behavior === 'string' && report.behavior.length > 0)
+          ? report.behavior.split(/[,;.]/)[0].trim()
+          : '';
+    
       let scholarSearchURL = `https://scholar.google.com/scholar?q=${encodeURIComponent(behaviorKeywords)}`;
-
-      // Wikipedia container ID for summary
       const wikiSummaryId = `wiki-summary-${idx}`;
-
-      // Linguistic analysis result container ID
       const analysisResultId = `analysis-result-${idx}`;
-
+    
       const div = document.createElement('div');
       div.className = 'report';
       div.innerHTML = `
-        <h3>Report #${idx + 1} - ${escapeHtml(report.name)}
+        <h3>Report #${idx + 1} - ${escapeHtml(report.name || '')}
           <div class="links">
             <button title="Search behavior on Google Scholar" onclick="window.open('${scholarSearchURL}', '_blank')">📚 Scholar</button>
           </div>
         </h3>
-        <b>Age:</b> ${escapeHtml(report.age)}<br>
-        <b>Gender:</b> ${escapeHtml(report.gender)}<br>
-        <b>When:</b> ${escapeHtml(report.when)}<br>
-        <b>Behavior:</b> ${escapeHtml(report.behavior)}<br>
-        <b>Message:</b> ${escapeHtml(report.message)}<br>
-
+        <b>Age:</b> ${escapeHtml(report.age || '')}<br>
+        <b>Gender:</b> ${escapeHtml(report.gender || '')}<br>
+        <b>When:</b> ${escapeHtml(report.when || '')}<br>
+        <b>Behavior:</b> ${escapeHtml(report.behavior || '')}<br>
+        <b>Message:</b> ${escapeHtml(report.message || '')}<br>
+    
         <div class="wiki-summary" id="${wikiSummaryId}">
           <em>Loading Wikipedia summary for behavior...</em>
         </div>
-
+    
         <label>Analytical Observations / Patterns Noticed:</label>
         <textarea id="obs-${idx}" placeholder="Write analytical observations...">${saved.observations || ''}</textarea>
-
+    
         <label>Analytical Notes:</label>
         <textarea id="notes-${idx}" placeholder="Add analytical notes...">${saved.notes || ''}</textarea>
-
+    
         <button onclick="saveData(${idx})">Save Analyst Data</button>
         <div class="status" id="status-${idx}"></div>
-
+    
         <div class="saved-notes" id="saved-notes-${idx}">
           ${renderSavedNotes(saved.savedNotes || [])}
         </div>
-
+    
         <div class="analysis-result" id="${analysisResultId}">
           <em>Analyzing linguistic cues...</em>
         </div>
       `;
-
+    
       container.appendChild(div);
-
+    
       // Fetch Wikipedia summary for behavior
       fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
-
+    
       // Analyze linguistic cues live based on message and behavior
-      analyzeLinguisticCues(report.message + ' ' + report.behavior, analysisResultId);
+      analyzeLinguisticCues((report.message || '') + ' ' + (report.behavior || ''), analysisResultId);
     });
+
   }
 
   function saveData(idx) {
