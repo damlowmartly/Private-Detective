@@ -55,7 +55,14 @@
     .status-msg {
       margin-top: 15px;
       font-size: 0.95rem;
+    }
+
+    .success {
       color: #4caf50;
+    }
+
+    .error {
+      color: #ff5252;
     }
   </style>
 </head>
@@ -82,7 +89,6 @@
     <label for="message">Additional Message / Notes:</label>
     <textarea id="message" name="message" placeholder="Additional notes or observations"></textarea>
 
-    <!-- Hidden subject for Formspree -->
     <input type="hidden" name="_subject" value="New Client Intake Submission" />
 
     <button type="submit">Submit Report</button>
@@ -97,7 +103,7 @@
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      // Collect data
+      // Collect values
       const name = document.getElementById('name').value.trim();
       const age = document.getElementById('age').value.trim();
       const gender = document.getElementById('gender').value.trim();
@@ -105,19 +111,18 @@
       const behavior = document.getElementById('behavior').value.trim();
       const message = document.getElementById('message').value.trim();
 
-      // Validate
       if (!name || !age || !gender || !when || !behavior) {
         alert('Please fill in all required fields.');
         return;
       }
 
-      // ✅ Save to localStorage
+      // Save locally
       const newReport = { name, age, gender, when, behavior, message };
       const existingReports = JSON.parse(localStorage.getItem('clientReports') || '[]');
       existingReports.push(newReport);
       localStorage.setItem('clientReports', JSON.stringify(existingReports));
 
-      // 📤 Send to Formspree
+      // Prepare Formspree data
       const formData = new FormData();
       formData.append('name', name);
       formData.append('age', age);
@@ -138,13 +143,17 @@
 
         if (response.ok) {
           statusDiv.textContent = "✅ Report submitted and saved successfully!";
+          statusDiv.className = "status-msg success";
           form.reset();
         } else {
-          statusDiv.textContent = "⚠️ Error sending email, but report was saved locally.";
+          const data = await response.json();
+          statusDiv.textContent = "⚠️ Error sending email: " + (data.error || "Unknown error.");
+          statusDiv.className = "status-msg error";
         }
-      } catch (error) {
-        statusDiv.textContent = "⚠️ Network error. Email not sent, but saved locally.";
-        console.error(error);
+      } catch (err) {
+        console.error("Formspree error:", err);
+        statusDiv.textContent = "⚠️ Network error. Report saved locally.";
+        statusDiv.className = "status-msg error";
       }
     });
   </script>
