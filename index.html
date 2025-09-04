@@ -2,240 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Detective AI Assistant</title>
+  <title>Client Intake Form - Detective AI</title>
   <style>
     body {
-      background: #0a0f14;
-      color: #00ffea;
-      font-family: 'Orbitron', 'Roboto', sans-serif;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    main {
-      background: #121b22;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #00ffe7aa inset;
+      background: #121212;
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 20px;
-      max-width: 900px;
-      width: 90%;
+      max-width: 600px;
+      margin: auto;
     }
-    #chat-container {
-      max-height: 400px;
-      overflow-y: auto;
-      margin-bottom: 10px;
-      font-family: 'Roboto', sans-serif;
-    }
-    .message-wrapper {
-      margin-bottom: 12px;
-      display: flex;
-    }
-    .message-wrapper.bot {
-      justify-content: flex-start;
-    }
-    .message-wrapper.user {
-      justify-content: flex-end;
-    }
-    .message {
-      max-width: 75%;
-      padding: 12px 18px;
-      border-radius: 18px;
-      box-shadow: 0 0 8px #00ffe7bb;
-      font-size: 1rem;
-    }
-    .message.user {
-      background: #00504f;
-      border-top-right-radius: 0;
-      color: #c6fff8;
-    }
-    .message.bot {
-      background: #003939;
-      border-top-left-radius: 0;
-      color: #a4f9f5;
-    }
-    form {
-      border-radius: 12px;
-      background: #011c1a;
-      padding: 15px;
-      box-shadow: inset 0 0 15px #008070;
-      display: none;
-    }
-    form label {
+    label {
       display: block;
-      margin-bottom: 10px;
+      margin-top: 15px;
       font-weight: 600;
-      color: #00ffe7;
     }
-    form input[type=email],
-    form textarea {
+    input[type=text], textarea {
       width: 100%;
       padding: 10px;
-      border-radius: 8px;
+      margin-top: 6px;
+      border-radius: 6px;
       border: none;
+      background: #292929;
+      color: #eee;
       font-size: 1rem;
-      background: #002825;
-      color: #00fff7;
-      resize: vertical;
       box-sizing: border-box;
+      resize: vertical;
     }
-    form textarea {
-      min-height: 100px;
+    textarea {
+      min-height: 80px;
     }
-    form button {
-      margin-top: 10px;
-      background: #00ffe7;
+    button {
+      margin-top: 20px;
+      background: #3f51b5;
+      color: white;
       border: none;
-      border-radius: 10px;
-      color: #003333;
-      font-weight: 700;
-      font-size: 1.1rem;
+      padding: 12px 25px;
+      font-size: 1rem;
+      border-radius: 8px;
       cursor: pointer;
-      padding: 10px 20px;
-      box-shadow: 0 0 12px #00ffe7;
       transition: background-color 0.3s ease;
     }
-    form button:disabled {
-      background: #004d4c;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    form button:hover:not(:disabled) {
-      background: #00d8c9;
-    }
-    #input-area {
-      margin-top: 10px;
-    }
-    #user-input {
-      width: 80%;
-      padding: 12px 16px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      background: #011c1a;
-      color: #00fff7;
-      font-size: 1rem;
-      box-shadow: inset 0 0 10px #008070;
+    button:hover {
+      background: #5c6bc0;
     }
   </style>
 </head>
 <body>
 
-  <main>
-    <div id="chat-container" aria-live="polite" aria-label="Chat messages"></div>
+  <h1>📝 Client Intake Form</h1>
+  <form id="client-form">
+    <label for="name">Name:</label>
+    <input type="text" id="name" required placeholder="Client's name" />
 
-    <form id="chat-form" action="https://formspree.io/f/xkgvqwnw" method="POST" target="_blank">
-      <label>
-        Your email:
-        <input type="email" name="email" id="user-email" required />
-      </label>
-      <label>
-        Your message:
-        <textarea name="message" id="full-message" required></textarea>
-      </label>
-      <button type="submit">Send</button>
-    </form>
+    <label for="age">Age:</label>
+    <input type="text" id="age" required placeholder="Client's age" />
 
-    <div id="input-area">
-      <input type="text" id="user-input" autocomplete="off" placeholder="Type your answer here..." required />
-    </div>
-  </main>
+    <label for="gender">Gender:</label>
+    <input type="text" id="gender" required placeholder="Client's gender" />
+
+    <label for="when">When (Date/Location):</label>
+    <input type="text" id="when" required placeholder="e.g., 2025-09-01 - New York" />
+
+    <label for="behavior">Behavior Description:</label>
+    <textarea id="behavior" required placeholder="Describe observed behavior"></textarea>
+
+    <label for="message">Additional Message / Notes:</label>
+    <textarea id="message" placeholder="Additional notes or observations"></textarea>
+
+    <button type="submit">Submit Report</button>
+  </form>
 
   <script>
-    const chatContainer = document.getElementById('chat-container');
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
-    const emailInput = document.getElementById('user-email');
-    const fullMessageTextarea = document.getElementById('full-message');
-    const inputArea = document.getElementById('input-area');
+    document.getElementById('client-form').addEventListener('submit', function(e) {
+      e.preventDefault();
 
-    const questions = [
-      "Greetings. I’m Detective AI. Please tell me your full name.",
-      "Thank you. How old are you?",
-      "What is your gender?",
-      "When did the incident happen? (Format: YYYY-MM-DD - Location)",
-      "Can you describe the person(s) involved?",
-      "What exactly happened?",
-      "Did you report this to anyone?",
-      "How has this affected your well-being?",
-      "Is there any evidence you can share?",
-      "I’ve recorded your statement. Our team will handle this seriously."
-    ];
+      // Gather input values
+      const name = document.getElementById('name').value.trim();
+      const age = document.getElementById('age').value.trim();
+      const gender = document.getElementById('gender').value.trim();
+      const when = document.getElementById('when').value.trim();
+      const behavior = document.getElementById('behavior').value.trim();
+      const message = document.getElementById('message').value.trim();
 
-    let currentQuestionIndex = 0;
-    let userResponses = [];
-
-    function appendMessage(text, sender = 'bot') {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'message-wrapper ' + sender;
-      const msg = document.createElement('div');
-      msg.className = 'message ' + sender;
-      msg.textContent = text;
-      wrapper.appendChild(msg);
-      chatContainer.appendChild(wrapper);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function startChat() {
-      appendMessage(questions[0], 'bot');
-      userInput.disabled = false;
-      userInput.focus();
-    }
-
-    userInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const input = userInput.value.trim();
-        if (!input) return;
-
-        appendMessage(input, 'user');
-        userResponses.push(input);
-        userInput.value = '';
-        currentQuestionIndex++;
-
-        if (currentQuestionIndex < questions.length) {
-          setTimeout(() => {
-            appendMessage(questions[currentQuestionIndex], 'bot');
-          }, 700);
-        } else {
-          appendMessage("Thank you. Please enter your email below and submit the form to complete your report.", 'bot');
-          userInput.disabled = true;
-          inputArea.style.display = 'none';
-
-          // Prepare full Q&A message
-          fullMessageTextarea.value = userResponses.map((ans, i) => `Q: ${questions[i]}\nA: ${ans}`).join('\n\n');
-          chatForm.style.display = 'block';
-          emailInput.focus();
-
-          saveClientToLocalStorage(userResponses);
-        }
+      if (!name || !age || !gender || !when || !behavior) {
+        alert('Please fill in all required fields.');
+        return;
       }
-    });
 
-    function saveClientToLocalStorage(responses) {
-      const [name, age, gender, when, ...rest] = responses;
-      const [behaviorDesc, whatHappened, whoReportedTo] = rest;
-      const remaining = rest.slice(3); // well-being, evidence
-      const message = responses.map((a, i) => `Q: ${questions[i]}\nA: ${a}`).join('\n\n');
-
+      // Build new report object
       const newReport = {
-        id: Date.now(),
-        name: name || "",
-        age: age || "",
-        gender: gender || "",
-        when: when || "",
-        behavior: [behaviorDesc, whatHappened, whoReportedTo].filter(Boolean).join("; "),
-        message: message
+        name,
+        age,
+        gender,
+        when,
+        behavior,
+        message
       };
 
-      let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
-      reports.push(newReport);
-      localStorage.setItem('clientReports', JSON.stringify(reports));
-    }
+      // Retrieve existing reports or create new array
+      const existingReports = JSON.parse(localStorage.getItem('clientReports') || '[]');
 
-    window.onload = startChat;
+      // Add new report to array
+      existingReports.push(newReport);
+
+      // Save back to localStorage
+      localStorage.setItem('clientReports', JSON.stringify(existingReports));
+
+      alert('Report submitted successfully!');
+
+      // Reset form
+      e.target.reset();
+    });
   </script>
 
 </body>
