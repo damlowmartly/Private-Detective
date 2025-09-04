@@ -65,12 +65,15 @@
       border-radius: 8px;
       padding: 15px;
       margin-bottom: 25px;
-      max-height: 380px;
+      max-height: 420px;
       overflow-y: auto;
     }
     .report h3 {
       margin-top: 0;
       color: #81a6ff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .status {
       margin-top: 10px;
@@ -92,6 +95,34 @@
     .note-item:last-child {
       border-bottom: none;
     }
+    .wiki-summary {
+      background: #101a2a;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      max-height: 120px;
+      overflow-y: auto;
+      color: #add8e6;
+      font-style: italic;
+    }
+    .links {
+      margin-top: 6px;
+    }
+    .links button {
+      margin-right: 6px;
+    }
+    .analysis-result {
+      margin-top: 10px;
+      background: #222;
+      border-radius: 8px;
+      padding: 10px;
+      color: #90ee90;
+      font-size: 0.9rem;
+      font-style: italic;
+      max-height: 100px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -111,7 +142,7 @@
   </div>
 
 <script>
-  const correctPassword = 'analyst2025'; // change this password
+  const correctPassword = 'analyst2025';
 
   function checkPassword() {
     const val = document.getElementById('pwd-input').value;
@@ -131,7 +162,6 @@
       container.innerHTML = '<p>No client reports available.</p>';
       return;
     }
-
     container.innerHTML = '';
 
     reports.forEach((report, idx) => {
@@ -139,15 +169,33 @@
       let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
       let saved = analystData[idx] || {};
 
+      // Behavior keyword for scholar search (first phrase or main keywords)
+      let behaviorKeywords = report.behavior ? report.behavior.split(/[,;.]/)[0].trim() : '';
+      let scholarSearchURL = `https://scholar.google.com/scholar?q=${encodeURIComponent(behaviorKeywords)}`;
+
+      // Wikipedia container ID for summary
+      const wikiSummaryId = `wiki-summary-${idx}`;
+
+      // Linguistic analysis result container ID
+      const analysisResultId = `analysis-result-${idx}`;
+
       const div = document.createElement('div');
       div.className = 'report';
       div.innerHTML = `
-        <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
+        <h3>Report #${idx + 1} - ${escapeHtml(report.name)}
+          <div class="links">
+            <button title="Search behavior on Google Scholar" onclick="window.open('${scholarSearchURL}', '_blank')">📚 Scholar</button>
+          </div>
+        </h3>
         <b>Age:</b> ${escapeHtml(report.age)}<br>
         <b>Gender:</b> ${escapeHtml(report.gender)}<br>
         <b>When:</b> ${escapeHtml(report.when)}<br>
         <b>Behavior:</b> ${escapeHtml(report.behavior)}<br>
         <b>Message:</b> ${escapeHtml(report.message)}<br>
+
+        <div class="wiki-summary" id="${wikiSummaryId}">
+          <em>Loading Wikipedia summary for behavior...</em>
+        </div>
 
         <label>Analytical Observations / Patterns Noticed:</label>
         <textarea id="obs-${idx}" placeholder="Write analytical observations...">${saved.observations || ''}</textarea>
@@ -161,8 +209,19 @@
         <div class="saved-notes" id="saved-notes-${idx}">
           ${renderSavedNotes(saved.savedNotes || [])}
         </div>
+
+        <div class="analysis-result" id="${analysisResultId}">
+          <em>Analyzing linguistic cues...</em>
+        </div>
       `;
+
       container.appendChild(div);
+
+      // Fetch Wikipedia summary for behavior
+      fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
+
+      // Analyze linguistic cues live based on message and behavior
+      analyzeLinguisticCues(report.message + ' ' + report.behavior, analysisResultId);
     });
   }
 
@@ -211,6 +270,83 @@
       return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m];
     });
   }
+
+  // Wikipedia summary fetch
+  async function fetchWikipediaSummary(query, containerId) {
+    if (!query) {
+      document.getElementById(containerId).innerHTML = "<em>No behavior keywords to fetch summary.</em>";
+      return;
+    }
+
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("Not found");
+
+      const data = await resp.json();
+      const container = document.getElementById(containerId);
+
+      if (data.extract) {
+        container.innerHTML = `<strong>Wikipedia summary:</strong> ${escapeHtml(data.extract)}`;
+      } else {
+        container.innerHTML = "<em>No summary available for this behavior.</em>";
+      }
+    } catch(e) {
+      document.getElementById(containerId).innerHTML = "<em>Wikipedia summary not found.</em>";
+    }
+  }
+
+  // Linguistic cues analyzer (basic example)
+  function analyzeLinguisticCues(text, containerId) {
+    const container = document.getElementById(containerId);
+    if (!text || text.trim().length === 0) {
+      container.innerHTML = "<em>No text to analyze.</em>";
+      return;
+    }
+
+    const lowerText = text.toLowerCase();
+
+    // Example simple linguistic markers:
+    const markers = {
+      'emotion': ['angry', 'sad', 'depressed', 'happy', 'anxious', 'frustrated', 'calm'],
+      'certainty': ['definitely', 'certainly', 'absolutely', 'surely', 'undoubtedly'],
+      'hesitation': ['maybe', 'perhaps', 'possibly', 'might', 'could', 'seems'],
+      'negative': ['not', 'never', 'no', 'none', 'nothing'],
+      'question': ['?', 'why', 'how', 'when', 'what'],
+      'intensity': ['very', 'extremely', 'highly', 'deeply', 'intensely']
+    };
+
+    let results = [];
+      for (const [category, words] of Object.entries(markers)) {
+        let count = 0;
+        words.forEach(w => {
+          let regex = new RegExp(`\\b${w}\\b`, 'gi');
+          const matches = text.match(regex);
+          if (matches) count += matches.length;
+        });
+        if (count > 0) {
+          results.push(`${category.charAt(0).toUpperCase() + category.slice(1)} cues detected: ${count}`);
+        }
+      }
+        // count occurrences
+       
+
+             let regex = new RegExp(`\\b${w}\\b`, 'gi');
+      const matches = text.match(regex);
+      if (matches) count += matches.length;
+    });
+    if (count > 0) {
+      results.push(`${category.charAt(0).toUpperCase() + category.slice(1)} cues detected: ${count}`);
+    }
+  }
+
+  if (results.length === 0) {
+    container.innerHTML = "<em>No significant linguistic cues detected.</em>";
+  } else {
+    container.innerHTML = results.map(r => `<div>${escapeHtml(r)}</div>`).join('');
+  }
+}
 </script>
 
 </body>
