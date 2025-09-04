@@ -166,57 +166,69 @@
       }
     });
 
-    function loadReports() {
-      const container = document.getElementById('reports-container');
-      let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
-      if (reports.length === 0) {
-        container.innerHTML = '<p>No client reports available.</p>';
-        return;
-      }
+   function loadReports() {
+  const container = document.getElementById('reports-container');
+  let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
+  if (reports.length === 0) {
+    container.innerHTML = '<p>No client reports available.</p>';
+    return;
+  }
 
-      container.innerHTML = '';
-      reports.forEach((report, idx) => {
-        let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
-        let saved = psychData[idx] || { savedNotes: [] };
+  container.innerHTML = '';
+  reports.forEach((report, idx) => {
+    let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
+    let saved = psychData[idx] || { savedNotes: [] };
 
-        const nameEsc = escapeHtml(report.name || '');
-        const ageEsc = escapeHtml(report.age || '');
-        const genderEsc = escapeHtml(report.gender || '');
-        const whenStr = typeof report.when === 'string' ? report.when : '';
-        const behaviorStr = typeof report.behavior === 'string' ? report.behavior : '';
-        const messageEsc = escapeHtml(report.message || '');
+    const nameEsc = escapeHtml(report.name || '');
+    const ageEsc = escapeHtml(report.age || '');
+    const genderEsc = escapeHtml(report.gender || '');
+    const whenStr = typeof report.when === 'string' ? report.when : '';
+    const behaviorStr = typeof report.behavior === 'string' ? report.behavior : '';
+    const messageEsc = escapeHtml(report.message || '');
 
-        const div = document.createElement('div');
-        div.className = 'report';
-        div.innerHTML = `
-          <h3><span>Report #${idx + 1} - ${nameEsc}</span></h3>
-          <b>Age:</b> ${ageEsc}<br>
-          <b>Gender:</b> ${genderEsc}<br>
-          <b>When:</b> ${whenStr}<br>
-          <b>Behavior:</b> ${behaviorStr}<br>
-          <b>Message:</b> ${messageEsc}<br>
+    const div = document.createElement('div');
+    div.className = 'report';
+    div.innerHTML = `
+      <h3>
+        <span>Report #${idx + 1} - ${nameEsc}</span>
+        <button class="search-btn facebook" title="Search Name on Facebook" onclick="fbSearch('${escapeJs(report.name || '')}')">🔎 FB Search</button>
+      </h3>
 
-          <label for="obs-${idx}">Psychologist Observations:</label>
-          <textarea id="obs-${idx}" placeholder="Write your observations...">${escapeHtml(saved.observations || '')}</textarea>
+      <b>Age:</b> ${ageEsc}<br>
+      <b>Gender:</b> ${genderEsc}<br>
 
-          <label for="behav-details-${idx}">Behavior Details:</label>
-          <input type="text" id="behav-details-${idx}" value="${escapeHtml(saved.behaviorDetails || '')}" />
+      <b>When:</b> 
+      <span id="when-text-${idx}">${escapeHtml(whenStr)}</span>
+      <button class="search-btn google" title="Search When/Location on Google" onclick="googleSearch('${escapeJs(whenStr)}')">🔍 Google Search</button>
+      <br>
 
-          <label for="notes-${idx}">Psychological Notes:</label>
-          <textarea id="notes-${idx}" placeholder="Add psychological notes...">${escapeHtml(saved.notes || '')}</textarea>
+      <b>Behavior:</b> ${escapeHtml(behaviorStr)}<br>
+      <b>Message:</b> ${messageEsc}<br>
 
-          <button onclick="saveData(${idx})">💾 Save</button>
-          <button onclick="sendToChatbot('${escapeJs(nameEsc)}', '${escapeJs(behaviorStr)}', '${escapeJs(messageEsc)}')">🤖 Send to Chatbot</button>
+      <label for="obs-${idx}">Psychologist Observations:</label>
+      <textarea id="obs-${idx}" placeholder="Write your observations...">${escapeHtml(saved.observations || '')}</textarea>
 
-          <div class="status" id="status-${idx}"></div>
+      <label for="behav-details-${idx}">Behavior Details:</label>
+      <input type="text" id="behav-details-${idx}" value="${escapeHtml(saved.behaviorDetails || '')}" />
 
-          <div class="saved-notes" id="saved-notes-${idx}">
-            ${renderSavedNotes(saved.savedNotes || [])}
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
+      <label for="notes-${idx}">Psychological Notes:</label>
+      <textarea id="notes-${idx}" placeholder="Add psychological notes...">${escapeHtml(saved.notes || '')}</textarea>
+
+      <button onclick="saveData(${idx})">💾 Save</button>
+
+      <div class="status" id="status-${idx}"></div>
+
+      <div class="saved-notes" id="saved-notes-${idx}">
+        ${renderSavedNotes(saved.savedNotes || [])}
+      </div>
+    `;
+    container.appendChild(div);
+
+    // Add auto-send listeners to behavior and notes inputs
+    addAutoSendListeners(idx);
+  });
+}
+
 
     function saveData(idx) {
       const obs = document.getElementById(`obs-${idx}`).value.trim();
