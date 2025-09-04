@@ -55,6 +55,7 @@
     .status-msg {
       margin-top: 15px;
       font-size: 0.95rem;
+      color: #4caf50;
     }
   </style>
 </head>
@@ -63,6 +64,9 @@
   <h1>📝 Client Intake Form</h1>
 
   <form id="client-form" action="https://formspree.io/f/xkgvqwnw" method="POST">
+    <label for="email">Email (required):</label>
+    <input type="email" name="email" id="email" required placeholder="client@example.com" />
+
     <label for="name">Name:</label>
     <input type="text" name="name" id="name" required placeholder="Client's name" />
 
@@ -81,18 +85,17 @@
     <label for="message">Additional Message / Notes:</label>
     <textarea name="message" id="message" placeholder="Additional notes or observations"></textarea>
 
-    <!-- Optional hidden fields -->
     <input type="hidden" name="_subject" value="New Client Report Submitted" />
     <input type="hidden" name="_redirect" value="thank-you.html" />
 
     <button type="submit">Submit Report</button>
-
     <div class="status-msg" id="status-msg"></div>
   </form>
 
   <script>
     document.getElementById('client-form').addEventListener('submit', function (e) {
-      // Collect data before form leaves page
+      // Collect form data for localStorage
+      const email = document.getElementById('email').value.trim();
       const name = document.getElementById('name').value.trim();
       const age = document.getElementById('age').value.trim();
       const gender = document.getElementById('gender').value.trim();
@@ -100,20 +103,14 @@
       const behavior = document.getElementById('behavior').value.trim();
       const message = document.getElementById('message').value.trim();
 
-      // Create new report object
-      const newReport = { name, age, gender, when, behavior, message };
-
-      // Retrieve existing reports from localStorage or initialize empty array
+      // Save locally
+      const newReport = { email, name, age, gender, when, behavior, message };
       const existingReports = JSON.parse(localStorage.getItem('clientReports') || '[]');
-
-      // Add new report
       existingReports.push(newReport);
-
-      // Save updated list back to localStorage
       localStorage.setItem('clientReports', JSON.stringify(existingReports));
 
-      // Optional: show message (won’t be seen if redirect happens)
-      document.getElementById('status-msg').textContent = '📁 Saved locally. Sending email...';
+      document.getElementById('status-msg').textContent = '📁 Report saved locally and submitted.';
+      // Note: Formspree will handle the actual submission, page redirect on success.
     });
   </script>
 
