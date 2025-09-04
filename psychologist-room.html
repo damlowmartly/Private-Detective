@@ -145,72 +145,80 @@
     });
 
     function loadReports() {
-      const container = document.getElementById('reports-container');
-      let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
-      if (reports.length === 0) {
-        container.innerHTML = '<p>No client reports available.</p>';
-        return;
-      }
+  const container = document.getElementById('reports-container');
+  let reports = JSON.parse(localStorage.getItem('clientReports') || '[]');
+  if (reports.length === 0) {
+    container.innerHTML = '<p>No client reports available.</p>';
+    return;
+  }
 
-      container.innerHTML = '';
-      reports.forEach((report, idx) => {
-        let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
-        let saved = psychData[idx] || {};
+  container.innerHTML = '';
+  reports.forEach((report, idx) => {
+    let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
+    let saved = psychData[idx] || {};
 
-        const nameEsc = escapeHtml(report.name);
-        const ageEsc = escapeHtml(report.age);
-        const genderEsc = escapeHtml(report.gender);
-        const whenEsc = escapeHtml(report.when);
-        const behaviorEsc = escapeHtml(report.behavior);
-        const messageEsc = escapeHtml(report.message);
+    const nameEsc = escapeHtml(report.name || '');
+    const ageEsc = escapeHtml(report.age || '');
+    const genderEsc = escapeHtml(report.gender || '');
+    const whenStr = typeof report.when === 'string' ? report.when : '';
+    const behaviorStr = typeof report.behavior === 'string' ? report.behavior : '';
+    const messageEsc = escapeHtml(report.message || '');
 
-        let behaviorKeywords = report.behavior ? report.behavior.split(/[,;.]/)[0].trim() : '';
-        let scholarSearchURL = `https://scholar.google.com/scholar?q=${encodeURIComponent(behaviorKeywords)}`;
-        let facebookSearchURL = `https://www.facebook.com/search/top?q=${encodeURIComponent(report.name)}`;
-        let whenParts = report.when.split(' - ');
-        let datePart = whenParts[0]?.trim() || '';
-        let locationPart = whenParts[1]?.trim() || '';
-        let weatherSearchQuery = `${datePart} weather in ${locationPart}`.trim();
-        let weatherSearchURL = `https://www.google.com/search?q=${encodeURIComponent(weatherSearchQuery)}`;
-
-        const wikiSummaryId = `wiki-summary-${idx}`;
-        const div = document.createElement('div');
-        div.className = 'report';
-        div.innerHTML = `
-          <h3><span>Report #${idx + 1} - ${nameEsc}</span>
-            <button onclick="window.open('${facebookSearchURL}', '_blank')">🔍 Facebook</button>
-          </h3>
-          <b>Age:</b> ${ageEsc}<br>
-          <b>Gender:</b> ${genderEsc}<br>
-          <b>When:</b> ${whenEsc}
-          <button onclick="window.open('${weatherSearchURL}', '_blank')">🌤️ Weather</button><br>
-          <b>Behavior:</b> ${behaviorEsc}
-          <button onclick="window.open('${scholarSearchURL}', '_blank')">📚 Scholar</button>
-
-          <div class="wiki-summary" id="${wikiSummaryId}">
-            <em>Loading Wikipedia summary for behavior...</em>
-          </div>
-
-          <label>Psychologist Observations / Experience:</label>
-          <textarea id="obs-${idx}" placeholder="Write your observations...">${saved.observations || ''}</textarea>
-
-          <label>Behavior Details (age/gender/experience):</label>
-          <input type="text" id="behav-details-${idx}" value="${saved.behaviorDetails || ''}" />
-
-          <label>Psychological Notes:</label>
-          <textarea id="notes-${idx}" placeholder="Add psychological notes...">${saved.notes || ''}</textarea>
-
-          <button onclick="saveData(${idx})">Save Psychologist Data</button>
-          <div class="status" id="status-${idx}"></div>
-
-          <div class="saved-notes" id="saved-notes-${idx}">
-            ${renderSavedNotes(saved.savedNotes || [])}
-          </div>
-        `;
-        container.appendChild(div);
-        fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
-      });
+    // Behavior keywords safely extracted
+    let behaviorKeywords = '';
+    if (behaviorStr.length > 0) {
+      behaviorKeywords = behaviorStr.split(/[,;.]/)[0].trim();
     }
+
+    let scholarSearchURL = `https://scholar.google.com/scholar?q=${encodeURIComponent(behaviorKeywords)}`;
+    let facebookSearchURL = `https://www.facebook.com/search/top?q=${encodeURIComponent(report.name || '')}`;
+
+    // Safe split on when
+    let whenParts = whenStr.length > 0 ? whenStr.split(' - ') : ['', ''];
+    let datePart = whenParts[0]?.trim() || '';
+    let locationPart = whenParts[1]?.trim() || '';
+    let weatherSearchQuery = `${datePart} weather in ${locationPart}`.trim();
+    let weatherSearchURL = `https://www.google.com/search?q=${encodeURIComponent(weatherSearchQuery)}`;
+
+    const wikiSummaryId = `wiki-summary-${idx}`;
+    const div = document.createElement('div');
+    div.className = 'report';
+    div.innerHTML = `
+      <h3><span>Report #${idx + 1} - ${nameEsc}</span>
+        <button onclick="window.open('${facebookSearchURL}', '_blank')">🔍 Facebook</button>
+      </h3>
+      <b>Age:</b> ${ageEsc}<br>
+      <b>Gender:</b> ${genderEsc}<br>
+      <b>When:</b> ${whenStr}
+      <button onclick="window.open('${weatherSearchURL}', '_blank')">🌤️ Weather</button><br>
+      <b>Behavior:</b> ${behaviorStr}
+      <button onclick="window.open('${scholarSearchURL}', '_blank')">📚 Scholar</button>
+
+      <div class="wiki-summary" id="${wikiSummaryId}">
+        <em>Loading Wikipedia summary for behavior...</em>
+      </div>
+
+      <label>Psychologist Observations / Experience:</label>
+      <textarea id="obs-${idx}" placeholder="Write your observations...">${saved.observations || ''}</textarea>
+
+      <label>Behavior Details (age/gender/experience):</label>
+      <input type="text" id="behav-details-${idx}" value="${saved.behaviorDetails || ''}" />
+
+      <label>Psychological Notes:</label>
+      <textarea id="notes-${idx}" placeholder="Add psychological notes...">${saved.notes || ''}</textarea>
+
+      <button onclick="saveData(${idx})">Save Psychologist Data</button>
+      <div class="status" id="status-${idx}"></div>
+
+      <div class="saved-notes" id="saved-notes-${idx}">
+        ${renderSavedNotes(saved.savedNotes || [])}
+      </div>
+    `;
+    container.appendChild(div);
+    fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
+  });
+}
+
 
     function saveData(idx) {
       const obs = document.getElementById(`obs-${idx}`).value.trim();
