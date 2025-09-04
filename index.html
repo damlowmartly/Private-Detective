@@ -19,7 +19,7 @@
       font-weight: 600;
     }
 
-    input[type=text], textarea {
+    input[type=text], input[type=email], textarea {
       width: 100%;
       padding: 10px;
       margin-top: 6px;
@@ -56,54 +56,43 @@
       margin-top: 15px;
       font-size: 0.95rem;
     }
-
-    .success {
-      color: #4caf50;
-    }
-
-    .error {
-      color: #ff5252;
-    }
   </style>
 </head>
 <body>
 
   <h1>📝 Client Intake Form</h1>
 
-  <form id="client-form">
+  <form id="client-form" action="https://formspree.io/f/xkgvqwnw" method="POST">
     <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required placeholder="Client's name" />
+    <input type="text" name="name" id="name" required placeholder="Client's name" />
 
     <label for="age">Age:</label>
-    <input type="text" id="age" name="age" required placeholder="Client's age" />
+    <input type="text" name="age" id="age" required placeholder="Client's age" />
 
     <label for="gender">Gender:</label>
-    <input type="text" id="gender" name="gender" required placeholder="Client's gender" />
+    <input type="text" name="gender" id="gender" required placeholder="Client's gender" />
 
     <label for="when">When (Date/Location):</label>
-    <input type="text" id="when" name="when" required placeholder="e.g., 2025-09-01 - New York" />
+    <input type="text" name="when" id="when" required placeholder="e.g., 2025-09-01 - New York" />
 
     <label for="behavior">Behavior Description:</label>
-    <textarea id="behavior" name="behavior" required placeholder="Describe observed behavior"></textarea>
+    <textarea name="behavior" id="behavior" required placeholder="Describe observed behavior"></textarea>
 
     <label for="message">Additional Message / Notes:</label>
-    <textarea id="message" name="message" placeholder="Additional notes or observations"></textarea>
+    <textarea name="message" id="message" placeholder="Additional notes or observations"></textarea>
 
-    <input type="hidden" name="_subject" value="New Client Intake Submission" />
+    <!-- Optional hidden fields -->
+    <input type="hidden" name="_subject" value="New Client Report Submitted" />
+    <input type="hidden" name="_redirect" value="thank-you.html" />
 
     <button type="submit">Submit Report</button>
 
-    <div id="form-status" class="status-msg"></div>
+    <div class="status-msg" id="status-msg"></div>
   </form>
 
   <script>
-    const form = document.getElementById('client-form');
-    const statusDiv = document.getElementById('form-status');
-
-    form.addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      // Collect values
+    document.getElementById('client-form').addEventListener('submit', function (e) {
+      // Collect data before form leaves page
       const name = document.getElementById('name').value.trim();
       const age = document.getElementById('age').value.trim();
       const gender = document.getElementById('gender').value.trim();
@@ -111,50 +100,20 @@
       const behavior = document.getElementById('behavior').value.trim();
       const message = document.getElementById('message').value.trim();
 
-      if (!name || !age || !gender || !when || !behavior) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-
-      // Save locally
+      // Create new report object
       const newReport = { name, age, gender, when, behavior, message };
+
+      // Retrieve existing reports from localStorage or initialize empty array
       const existingReports = JSON.parse(localStorage.getItem('clientReports') || '[]');
+
+      // Add new report
       existingReports.push(newReport);
+
+      // Save updated list back to localStorage
       localStorage.setItem('clientReports', JSON.stringify(existingReports));
 
-      // Prepare Formspree data
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('age', age);
-      formData.append('gender', gender);
-      formData.append('when', when);
-      formData.append('behavior', behavior);
-      formData.append('message', message);
-      formData.append('_subject', 'New Client Intake Submission');
-
-      try {
-        const response = await fetch("https://formspree.io/f/xkgvqwnw", {
-          method: "POST",
-          body: formData,
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          statusDiv.textContent = "✅ Report submitted and saved successfully!";
-          statusDiv.className = "status-msg success";
-          form.reset();
-        } else {
-          const data = await response.json();
-          statusDiv.textContent = "⚠️ Error sending email: " + (data.error || "Unknown error.");
-          statusDiv.className = "status-msg error";
-        }
-      } catch (err) {
-        console.error("Formspree error:", err);
-        statusDiv.textContent = "⚠️ Network error. Report saved locally.";
-        statusDiv.className = "status-msg error";
-      }
+      // Optional: show message (won’t be seen if redirect happens)
+      document.getElementById('status-msg').textContent = '📁 Saved locally. Sending email...';
     });
   </script>
 
