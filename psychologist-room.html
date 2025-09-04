@@ -225,18 +225,7 @@
           ${renderSavedNotes(saved.savedNotes || [])}
         </div>
           `;
-    div.innerHTML = `
-        <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
-        <b>Behavior:</b> ${escapeHtml(report.behavior)}<br>
-    
-        <!-- Wikipedia summaries will appear here -->
-        <div class="wiki-section" style="margin-top: 10px; background: #222; padding: 10px; border-radius: 6px;">
-          Loading Wikipedia summaries...
-        </div>
-    
-        <!-- rest of your report HTML -->
-      `;
-    
+  
       container.appendChild(div);
     
       // Call async function to add wiki info after the div is in DOM
