@@ -123,8 +123,11 @@
   <div id="login-container">
     <h2>🔐 Psychologist Access</h2>
     <p>Enter password to access Psychologist Room.</p>
-    <input type="password" id="pwd-input" placeholder="Password" />
-    <button onclick="checkPassword()">Enter</button>
+    <form id="login-form">
+      <input type="password" id="pwd-input" placeholder="Password" required autofocus />
+      <button type="submit">Enter</button>
+    </form>
+
   </div>
 
   <div id="room-content">
@@ -135,18 +138,24 @@
   </div>
 
 <script>
-  const correctPassword = 'psychologist2025';
+const correctPassword = 'psychologist2025';
 
-  function checkPassword() {
-    const val = document.getElementById('pwd-input').value;
-    if (val === correctPassword) {
-      document.getElementById('login-container').style.display = 'none';
-      document.getElementById('room-content').style.display = 'block';
-      loadReports();
-    } else {
-      alert('Incorrect password! Access denied.');
-    }
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  e.preventDefault(); // prevent page reload
+  checkPassword();
+});
+
+function checkPassword() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === correctPassword) {
+    document.getElementById('login-container').style.display = 'none';
+    document.getElementById('room-content').style.display = 'block';
+    loadReports();
+  } else {
+    alert('Incorrect password! Access denied.');
   }
+}
+
 
   function loadReports() {
     const container = document.getElementById('reports-container');
