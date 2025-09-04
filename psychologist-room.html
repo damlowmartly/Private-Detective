@@ -30,12 +30,12 @@
       background: #3f51b5;
       border: none;
       border-radius: 8px;
-      padding: 12px 25px;
-      font-size: 1rem;
+      padding: 8px 16px;
+      font-size: 0.9rem;
       color: #fff;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      margin-top: 15px;
+      margin-left: 8px;
     }
     button:hover {
       background: #5c6bc0;
@@ -65,12 +65,18 @@
       border-radius: 8px;
       padding: 15px;
       margin-bottom: 25px;
-      max-height: 380px;
+      max-height: 520px;
       overflow-y: auto;
     }
     .report h3 {
       margin-top: 0;
       color: #81a6ff;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .report h3 > span {
+      flex: 1;
     }
     .status {
       margin-top: 10px;
@@ -92,6 +98,24 @@
     .note-item:last-child {
       border-bottom: none;
     }
+    .wiki-summary {
+      background: #101a2a;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      max-height: 120px;
+      overflow-y: auto;
+      color: #add8e6;
+      font-style: italic;
+    }
+    .live-links {
+      margin-top: 4px;
+    }
+    .live-links button {
+      margin-left: 4px;
+      margin-top: 6px;
+    }
   </style>
 </head>
 <body>
@@ -111,7 +135,7 @@
   </div>
 
 <script>
-  const correctPassword = 'psychologist2025'; // change this password
+  const correctPassword = 'psychologist2025';
 
   function checkPassword() {
     const val = document.getElementById('pwd-input').value;
@@ -135,19 +159,55 @@
     container.innerHTML = '';
 
     reports.forEach((report, idx) => {
-      // Load saved psychologist data per report, key by report index
       let psychData = JSON.parse(localStorage.getItem('psychologistData') || '{}');
       let saved = psychData[idx] || {};
 
+      // Escape fields
+      const nameEsc = escapeHtml(report.name);
+      const ageEsc = escapeHtml(report.age);
+      const genderEsc = escapeHtml(report.gender);
+      const whenEsc = escapeHtml(report.when);
+      const behaviorEsc = escapeHtml(report.behavior);
+      const messageEsc = escapeHtml(report.message);
+
+      // Behavior keywords for scholar search (take first phrase or main keywords)
+      let behaviorKeywords = report.behavior ? report.behavior.split(/[,;.]/)[0].trim() : '';
+      let scholarSearchURL = `https://scholar.google.com/scholar?q=${encodeURIComponent(behaviorKeywords)}`;
+
+      // Facebook search URL for victim name
+      let facebookSearchURL = `https://www.facebook.com/search/top?q=${encodeURIComponent(report.name)}`;
+
+      // Google Weather search with location and date from 'when' field
+      // Extract date and location
+      let whenParts = report.when.split(' - ');
+      let datePart = whenParts[0] ? whenParts[0].trim() : '';
+      let locationPart = whenParts[1] ? whenParts[1].trim() : '';
+      // Compose Google search query for weather on date and location
+      let weatherSearchQuery = datePart && locationPart ? `${datePart} weather in ${locationPart}` : locationPart || 'weather';
+      let weatherSearchURL = `https://www.google.com/search?q=${encodeURIComponent(weatherSearchQuery)}`;
+
+      // Prepare wikipedia summary container id
+      const wikiSummaryId = `wiki-summary-${idx}`;
+
+      // Build the report HTML
       const div = document.createElement('div');
       div.className = 'report';
       div.innerHTML = `
-        <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
-        <b>Age:</b> ${escapeHtml(report.age)}<br>
-        <b>Gender:</b> ${escapeHtml(report.gender)}<br>
-        <b>When:</b> ${escapeHtml(report.when)}<br>
-        <b>Behavior:</b> ${escapeHtml(report.behavior)}<br>
-        <b>Message:</b> ${escapeHtml(report.message)}<br>
+        <h3><span>Report #${idx + 1} - ${nameEsc}</span>
+          <button title="Search victim on Facebook" onclick="window.open('${facebookSearchURL}', '_blank')">🔍 Facebook</button>
+        </h3>
+        <b>Age:</b> ${ageEsc}<br>
+        <b>Gender:</b> ${genderEsc}<br>
+        <b>When:</b> ${whenEsc}
+        <button title="Search weather for date & location" onclick="window.open('${weatherSearchURL}', '_blank')">🌤️ Weather</button>
+        <br>
+        <b>Behavior:</b> ${behaviorEsc}
+        <button title="Search behavior on Google Scholar" onclick="window.open('${scholarSearchURL}', '_blank')">📚 Scholar</button>
+        <br>
+
+        <div class="wiki-summary" id="${wikiSummaryId}">
+          <em>Loading Wikipedia summary for behavior...</em>
+        </div>
 
         <label>Psychologist Observations / Experience:</label>
         <textarea id="obs-${idx}" placeholder="Write your observations...">${saved.observations || ''}</textarea>
@@ -165,7 +225,11 @@
           ${renderSavedNotes(saved.savedNotes || [])}
         </div>
       `;
+
       container.appendChild(div);
+
+      // Fetch Wikipedia summary for behavior keywords
+      fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
     });
   }
 
@@ -181,12 +245,10 @@
       psychData[idx] = { observations: '', behaviorDetails: '', notes: '', savedNotes: [] };
     }
 
-    // Save as current inputs
     psychData[idx].observations = obs;
     psychData[idx].behaviorDetails = behav;
     psychData[idx].notes = notes;
 
-    // Save a timestamped note history on each save
     const now = new Date().toLocaleString();
     psychData[idx].savedNotes = psychData[idx].savedNotes || [];
     psychData[idx].savedNotes.push(`[${now}] Observations saved.`);
@@ -216,6 +278,32 @@
     return text.replace(/[&<>"']/g, function(m) {
       return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m];
     });
+  }
+
+  // Wikipedia summary fetch (simplified)
+  async function fetchWikipediaSummary(query, containerId) {
+    if (!query) {
+      document.getElementById(containerId).innerHTML = "<em>No behavior keywords to fetch summary.</em>";
+      return;
+    }
+
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("Not found");
+
+      const data = await resp.json();
+      const container = document.getElementById(containerId);
+
+      if (data.extract) {
+        container.innerHTML = `<strong>Wikipedia summary:</strong> ${escapeHtml(data.extract)}`;
+      } else {
+        container.innerHTML = "<em>No summary available for this behavior.</em>";
+      }
+    } catch(e) {
+      document.getElementById(containerId).innerHTML = "<em>Wikipedia summary not found.</em>";
+    }
   }
 </script>
 
