@@ -332,14 +332,6 @@
         // count occurrences
        
 
-             let regex = new RegExp(`\\b${w}\\b`, 'gi');
-      const matches = text.match(regex);
-      if (matches) count += matches.length;
-    });
-    if (count > 0) {
-      results.push(`${category.charAt(0).toUpperCase() + category.slice(1)} cues detected: ${count}`);
-    }
-  }
 
   if (results.length === 0) {
     container.innerHTML = "<em>No significant linguistic cues detected.</em>";
