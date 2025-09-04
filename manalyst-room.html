@@ -30,12 +30,12 @@
       background: #3f51b5;
       border: none;
       border-radius: 8px;
-      padding: 12px 25px;
+      padding: 10px 20px;
       font-size: 1rem;
       color: #fff;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      margin-top: 15px;
+      margin: 10px 5px 0 0;
     }
     button:hover {
       background: #5c6bc0;
@@ -65,15 +65,12 @@
       border-radius: 8px;
       padding: 15px;
       margin-bottom: 25px;
-      max-height: 420px;
+      max-height: 480px;
       overflow-y: auto;
     }
     .report h3 {
       margin-top: 0;
       color: #81a6ff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
     .status {
       margin-top: 10px;
@@ -95,59 +92,29 @@
     .note-item:last-child {
       border-bottom: none;
     }
-    .wiki-summary {
-      background: #101a2a;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 0.9rem;
-      max-height: 120px;
-      overflow-y: auto;
-      color: #add8e6;
-      font-style: italic;
-    }
-    .links {
-      margin-top: 6px;
-    }
-    .links button {
-      margin-right: 6px;
-    }
-    .analysis-result {
-      margin-top: 10px;
-      background: #222;
-      border-radius: 8px;
-      padding: 10px;
-      color: #90ee90;
-      font-size: 0.9rem;
-      font-style: italic;
-      max-height: 100px;
-      overflow-y: auto;
-    }
   </style>
 </head>
 <body>
 
- <div id="login-container">
-  <h2>🔐 Analyst Access</h2>
-  <p>Enter password to access Analyst Room.</p>
-  <form id="login-form">
-    <input type="password" id="pwd-input" placeholder="Password" required autofocus />
-    <button type="submit">Enter</button>
-  </form>
-</div>
-
+  <div id="login-container">
+    <h2>🔐 Analyst Access</h2>
+    <p>Enter password to access Analyst Room.</p>
+    <form id="login-form">
+      <input type="password" id="pwd-input" placeholder="Password" required autofocus />
+      <button type="submit">Enter</button>
+    </form>
+  </div>
 
   <div id="room-content">
     <h1>📊 Analyst Room</h1>
-    <div id="reports-container">
-      <!-- Client reports with input forms will be appended here -->
-    </div>
+    <div id="reports-container"></div>
   </div>
 
 <script>
   const correctPassword = 'analyst2025';
 
-  function checkPassword() {
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
     const val = document.getElementById('pwd-input').value;
     if (val === correctPassword) {
       document.getElementById('login-container').style.display = 'none';
@@ -156,12 +123,7 @@
     } else {
       alert('Incorrect password! Access denied.');
     }
-  }
-  document.getElementById('login-form').addEventListener('submit', function(e) {
-    e.preventDefault();  // prevent form from reloading page
-    checkPassword();
   });
-
 
   function loadReports() {
     const container = document.getElementById('reports-container');
@@ -170,67 +132,38 @@
       container.innerHTML = '<p>No client reports available.</p>';
       return;
     }
-    container.innerHTML = '';
 
+    container.innerHTML = '';
     reports.forEach((report, idx) => {
-      // Load saved analyst data per report, key by report index
-      let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
-      let saved = analystData[idx] || {};
-    
-      // Defensive checks for behavior field before split
-      let behaviorKeywords = (typeof report.behavior === 'string' && report.behavior.length > 0)
-          ? report.behavior.split(/[,;.]/)[0].trim()
-          : '';
-    
-      let scholarSearchURL = `https://scholar.google.com/scholar?q=${encodeURIComponent(behaviorKeywords)}`;
-      const wikiSummaryId = `wiki-summary-${idx}`;
-      const analysisResultId = `analysis-result-${idx}`;
-    
+      const savedData = JSON.parse(localStorage.getItem('analystData') || '{}')[idx] || {};
+
       const div = document.createElement('div');
       div.className = 'report';
       div.innerHTML = `
-        <h3>Report #${idx + 1} - ${escapeHtml(report.name || '')}
-          <div class="links">
-            <button title="Search behavior on Google Scholar" onclick="window.open('${scholarSearchURL}', '_blank')">📚 Scholar</button>
-          </div>
-        </h3>
+        <h3>Report #${idx + 1} - ${escapeHtml(report.name || '')}</h3>
         <b>Age:</b> ${escapeHtml(report.age || '')}<br>
         <b>Gender:</b> ${escapeHtml(report.gender || '')}<br>
         <b>When:</b> ${escapeHtml(report.when || '')}<br>
         <b>Behavior:</b> ${escapeHtml(report.behavior || '')}<br>
         <b>Message:</b> ${escapeHtml(report.message || '')}<br>
-    
-        <div class="wiki-summary" id="${wikiSummaryId}">
-          <em>Loading Wikipedia summary for behavior...</em>
-        </div>
-    
-        <label>Analytical Observations / Patterns Noticed:</label>
-        <textarea id="obs-${idx}" placeholder="Write analytical observations...">${saved.observations || ''}</textarea>
-    
+
+        <label>Analytical Observations:</label>
+        <textarea id="obs-${idx}">${savedData.observations || ''}</textarea>
+
         <label>Analytical Notes:</label>
-        <textarea id="notes-${idx}" placeholder="Add analytical notes...">${saved.notes || ''}</textarea>
-    
-        <button onclick="saveData(${idx})">Save Analyst Data</button>
+        <textarea id="notes-${idx}">${savedData.notes || ''}</textarea>
+
+        <button onclick="saveData(${idx})">💾 Save</button>
+        <button onclick="analyzeEmotion('${escapeForURL(report.behavior)}', '${escapeForURL(report.message)}')">🧠 Analyze Emotion</button>
+
         <div class="status" id="status-${idx}"></div>
-    
+
         <div class="saved-notes" id="saved-notes-${idx}">
-          ${renderSavedNotes(saved.savedNotes || [])}
-        </div>
-    
-        <div class="analysis-result" id="${analysisResultId}">
-          <em>Analyzing linguistic cues...</em>
+          ${renderSavedNotes(savedData.savedNotes || [])}
         </div>
       `;
-    
       container.appendChild(div);
-    
-      // Fetch Wikipedia summary for behavior
-      fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
-    
-      // Analyze linguistic cues live based on message and behavior
-      analyzeLinguisticCues((report.message || '') + ' ' + (report.behavior || ''), analysisResultId);
     });
-
   }
 
   function saveData(idx) {
@@ -239,31 +172,23 @@
     const status = document.getElementById(`status-${idx}`);
 
     let analystData = JSON.parse(localStorage.getItem('analystData') || '{}');
-
-    if (!analystData[idx]) {
-      analystData[idx] = { observations: '', notes: '', savedNotes: [] };
-    }
+    if (!analystData[idx]) analystData[idx] = { savedNotes: [] };
 
     analystData[idx].observations = obs;
     analystData[idx].notes = notes;
 
-    // Save a timestamped note history on each save
     const now = new Date().toLocaleString();
-    analystData[idx].savedNotes = analystData[idx].savedNotes || [];
-    analystData[idx].savedNotes.push(`[${now}] Analyst data saved.`);
+    analystData[idx].savedNotes.push(`[${now}] Saved`);
 
     localStorage.setItem('analystData', JSON.stringify(analystData));
-
     status.style.color = '#4caf50';
-    status.textContent = 'Data saved successfully.';
+    status.textContent = 'Saved successfully.';
     renderSavedNotesUI(idx, analystData[idx].savedNotes);
   }
 
   function renderSavedNotes(notesArr) {
-    if (notesArr.length === 0) {
-      return '<em>No saved notes yet.</em>';
-    }
-    return notesArr.map(n => `<div class="note-item">${escapeHtml(n)}</div>`).join('');
+    if (!notesArr.length) return '<em>No saved notes yet.</em>';
+    return notesArr.map(note => `<div class="note-item">${escapeHtml(note)}</div>`).join('');
   }
 
   function renderSavedNotesUI(idx, notesArr) {
@@ -271,82 +196,22 @@
     container.innerHTML = renderSavedNotes(notesArr);
   }
 
-  // Escape to prevent HTML injection
+  function analyzeEmotion(behavior, message) {
+    const query = encodeURIComponent(`${behavior} ${message}`);
+    const url = `https://www.iweaver.ai/agents/ai-sentiment-analysis-tool/?query=${query}`;
+    window.open(url, '_blank');
+  }
+
   function escapeHtml(text) {
     if (!text) return '';
-    return text.replace(/[&<>"']/g, function(m) {
-      return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m];
-    });
+    return text.replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
   }
 
-  // Wikipedia summary fetch
-  async function fetchWikipediaSummary(query, containerId) {
-    if (!query) {
-      document.getElementById(containerId).innerHTML = "<em>No behavior keywords to fetch summary.</em>";
-      return;
-    }
-
-    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error("Not found");
-
-      const data = await resp.json();
-      const container = document.getElementById(containerId);
-
-      if (data.extract) {
-        container.innerHTML = `<strong>Wikipedia summary:</strong> ${escapeHtml(data.extract)}`;
-      } else {
-        container.innerHTML = "<em>No summary available for this behavior.</em>";
-      }
-    } catch(e) {
-      document.getElementById(containerId).innerHTML = "<em>Wikipedia summary not found.</em>";
-    }
+  function escapeForURL(text) {
+    return encodeURIComponent(text || '');
   }
-
-  // Linguistic cues analyzer (basic example)
-  function analyzeLinguisticCues(text, containerId) {
-    const container = document.getElementById(containerId);
-    if (!text || text.trim().length === 0) {
-      container.innerHTML = "<em>No text to analyze.</em>";
-      return;
-    }
-
-    const lowerText = text.toLowerCase();
-
-    // Example simple linguistic markers:
-    const markers = {
-      'emotion': ['angry', 'sad', 'depressed', 'happy', 'anxious', 'frustrated', 'calm'],
-      'certainty': ['definitely', 'certainly', 'absolutely', 'surely', 'undoubtedly'],
-      'hesitation': ['maybe', 'perhaps', 'possibly', 'might', 'could', 'seems'],
-      'negative': ['not', 'never', 'no', 'none', 'nothing'],
-      'question': ['?', 'why', 'how', 'when', 'what'],
-      'intensity': ['very', 'extremely', 'highly', 'deeply', 'intensely']
-    };
-
-    let results = [];
-      for (const [category, words] of Object.entries(markers)) {
-        let count = 0;
-        words.forEach(w => {
-          let regex = new RegExp(`\\b${w}\\b`, 'gi');
-          const matches = text.match(regex);
-          if (matches) count += matches.length;
-        });
-        if (count > 0) {
-          results.push(`${category.charAt(0).toUpperCase() + category.slice(1)} cues detected: ${count}`);
-        }
-      }
-        // count occurrences
-       
-
-
-  if (results.length === 0) {
-    container.innerHTML = "<em>No significant linguistic cues detected.</em>";
-  } else {
-    container.innerHTML = results.map(r => `<div>${escapeHtml(r)}</div>`).join('');
-  }
-}
 </script>
 
 </body>
