@@ -158,58 +158,93 @@
     container.innerHTML = '';
 
     reports.forEach((report, idx) => {
-      let psych = psychData[idx] || {};
-      let analyst = analystData[idx] || {};
-      let investigator = investigatorData[idx] || { detectiveNotes: '', assignedTasks: '', savedNotes: [] };
+  let psych = psychData[idx] || {};
+  let analyst = analystData[idx] || {};
+  let investigator = investigatorData[idx] || { detectiveNotes: '', assignedTasks: '', savedNotes: [] };
 
-      const div = document.createElement('div');
-      div.className = 'report';
+  // Prepare search URLs
+  const nameEncoded = encodeURIComponent(report.name);
+  const behaviorEncoded = encodeURIComponent(report.behavior);
+  const whenEncoded = encodeURIComponent(report.when);
 
-      div.innerHTML = `
-        <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
-        <div class="flex-row">
-          <div class="flex-col">
-            <b>Client Info</b>
-            <div class="data-block">
-              Age: ${escapeHtml(report.age)}<br>
-              Gender: ${escapeHtml(report.gender)}<br>
-              When: ${escapeHtml(report.when)}<br>
-              Behavior: ${escapeHtml(report.behavior)}<br>
-              Message: ${escapeHtml(report.message)}
-            </div>
-          </div>
-          <div class="flex-col">
-            <b>Psychologist Observations</b>
-            <div class="data-block">${escapeHtml(psych.observations || 'No data')}</div>
-            <b>Behavior Details</b>
-            <div class="data-block">${escapeHtml(psych.behaviorDetails || 'No data')}</div>
-            <b>Psychological Notes</b>
-            <div class="data-block">${escapeHtml(psych.notes || 'No data')}</div>
-          </div>
-          <div class="flex-col">
-            <b>Analyst Observations</b>
-            <div class="data-block">${escapeHtml(analyst.observations || 'No data')}</div>
-            <b>Analytical Notes</b>
-            <div class="data-block">${escapeHtml(analyst.notes || 'No data')}</div>
-          </div>
-        </div>
+  const googleSearch = `https://www.google.com/search?q=${nameEncoded}`;
+  const facebookSearch = `https://www.facebook.com/search/top?q=${nameEncoded}`;
+  const twitterSearch = `https://twitter.com/search?q=${nameEncoded}`;
+  const scholarSearch = `https://scholar.google.com/scholar?q=${behaviorEncoded}`;
 
-        <label>Detective Notes:</label>
-        <textarea id="detective-notes-${idx}" placeholder="Add your detective notes...">${investigator.detectiveNotes || ''}</textarea>
-
-        <label>Assign Tasks to Team:</label>
-        <textarea id="assigned-tasks-${idx}" placeholder="Write tasks for psychologist or analyst...">${investigator.assignedTasks || ''}</textarea>
-
-        <button onclick="saveData(${idx})">Save Investigator Data</button>
-        <div class="status" id="status-${idx}"></div>
-
-        <div class="saved-notes" id="saved-notes-${idx}">
-          ${renderSavedNotes(investigator.savedNotes || [])}
-        </div>
-      `;
-      container.appendChild(div);
-    });
+  // Simple sentiment function (very basic)
+  function getSentiment(text) {
+    const positive = ['good','happy','safe','love','support'];
+    const negative = ['bad','sad','fear','hate','bully','danger','hurt'];
+    const txt = text.toLowerCase();
+    let score = 0;
+    positive.forEach(word => { if (txt.includes(word)) score++; });
+    negative.forEach(word => { if (txt.includes(word)) score--; });
+    if(score > 0) return '😊 Positive';
+    if(score < 0) return '😟 Negative';
+    return '😐 Neutral';
   }
+
+  const sentimentResult = getSentiment(report.message || '');
+
+  const div = document.createElement('div');
+  div.className = 'report';
+
+  div.innerHTML = `
+    <h3>Report #${idx + 1} - ${escapeHtml(report.name)}</h3>
+    <div class="flex-row">
+      <div class="flex-col">
+        <b>Client Info</b>
+        <div class="data-block">
+          Age: ${escapeHtml(report.age)}<br>
+          Gender: ${escapeHtml(report.gender)}<br>
+          When: ${escapeHtml(report.when)}<br>
+          Behavior: ${escapeHtml(report.behavior)}<br>
+          Message: ${escapeHtml(report.message)}<br>
+          <b>Message Sentiment:</b> ${sentimentResult}
+        </div>
+        <div style="margin-top:10px;">
+          <b>Quick Searches:</b><br>
+          <button onclick="window.open('${googleSearch}','_blank')">Google</button>
+          <button onclick="window.open('${facebookSearch}','_blank')">Facebook</button>
+          <button onclick="window.open('${twitterSearch}','_blank')">Twitter</button>
+          <button onclick="window.open('${scholarSearch}','_blank')">Scholar</button>
+        </div>
+      </div>
+
+      <div class="flex-col">
+        <b>Psychologist Observations</b>
+        <div class="data-block">${escapeHtml(psych.observations || 'No data')}</div>
+        <b>Behavior Details</b>
+        <div class="data-block">${escapeHtml(psych.behaviorDetails || 'No data')}</div>
+        <b>Psychological Notes</b>
+        <div class="data-block">${escapeHtml(psych.notes || 'No data')}</div>
+      </div>
+      <div class="flex-col">
+        <b>Analyst Observations</b>
+        <div class="data-block">${escapeHtml(analyst.observations || 'No data')}</div>
+        <b>Analytical Notes</b>
+        <div class="data-block">${escapeHtml(analyst.notes || 'No data')}</div>
+      </div>
+    </div>
+
+    <label>Detective Notes:</label>
+    <textarea id="detective-notes-${idx}" placeholder="Add your detective notes...">${investigator.detectiveNotes || ''}</textarea>
+
+    <label>Assign Tasks to Team:</label>
+    <textarea id="assigned-tasks-${idx}" placeholder="Write tasks for psychologist or analyst...">${investigator.assignedTasks || ''}</textarea>
+
+    <button onclick="saveData(${idx})">Save Investigator Data</button>
+    <div class="status" id="status-${idx}"></div>
+
+    <div class="saved-notes" id="saved-notes-${idx}">
+      ${renderSavedNotes(investigator.savedNotes || [])}
+    </div>
+  `;
+
+  container.appendChild(div);
+});
+
 
   function saveData(idx) {
     const detectiveNotes = document.getElementById(`detective-notes-${idx}`).value.trim();
