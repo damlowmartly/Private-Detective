@@ -229,7 +229,8 @@
       container.appendChild(div);
     
       // Call async function to add wiki info after the div is in DOM
-      addWikiSummaries(div, report.behavior);
+     fetchWikipediaSummary(behaviorKeywords, wikiSummaryId);
+
   }
 
   function saveData(idx) {
