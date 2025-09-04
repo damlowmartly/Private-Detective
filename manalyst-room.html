@@ -127,12 +127,15 @@
 </head>
 <body>
 
-  <div id="login-container">
-    <h2>🔐 Analyst Access</h2>
-    <p>Enter password to access Analyst Room.</p>
-    <input type="password" id="pwd-input" placeholder="Password" />
-    <button onclick="checkPassword()">Enter</button>
-  </div>
+ <div id="login-container">
+  <h2>🔐 Analyst Access</h2>
+  <p>Enter password to access Analyst Room.</p>
+  <form id="login-form">
+    <input type="password" id="pwd-input" placeholder="Password" required autofocus />
+    <button type="submit">Enter</button>
+  </form>
+</div>
+
 
   <div id="room-content">
     <h1>📊 Analyst Room</h1>
@@ -154,6 +157,11 @@
       alert('Incorrect password! Access denied.');
     }
   }
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();  // prevent form from reloading page
+    checkPassword();
+  });
+
 
   function loadReports() {
     const container = document.getElementById('reports-container');
